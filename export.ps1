@@ -51,8 +51,7 @@ $dq = [char]34
 # 3. RENDER STL PARTS
 $parts = @(
     "funnel",
-    "plunger_insert",
-    "filter_insert"
+    "scraper"
 )
 
 foreach ($pName in $parts) {

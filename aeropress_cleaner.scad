@@ -1,9 +1,12 @@
-// OpenSCAD Model for Aeropress Desk Cleaning Funnel (ADCF)
+// OpenSCAD Model for Aeropress Desk Cleaning System
 // Designed for support-free printing.
+// This is a 2-Part System:
+// 1. Funnel Part (Rigid): A simple waste director with handle.
+// 2. Scraper Part (Flexible): A handheld dual-purpose tool (plunger face scraper + metal filter squeegee clamp).
 
 // --- PART SELECTOR ---
 // Select which part to render for printing
-part = "all"; // [all: Visual Assembly, funnel: Funnel Body (Rigid), plunger_insert: Plunger Squeegee (Flexible), filter_insert: Filter Squeegee Half (Flexible)]
+part = "all"; // [all: Visual Assembly, funnel: Funnel Body (Rigid), scraper: Scraper Tool Open (Flexible)]
 
 // --- CUSTOMIZABLE PARAMETERS ---
 // Outer diameter of the Aeropress plunger rubber seal (mm)
@@ -16,38 +19,8 @@ filter_di = 62.0;
 filter_thickness = 0.3;
 
 // --- ADVANCED PARAMETERS (TOLERANCES & WALLS) ---
-// Clearance between printed parts (mm)
-clearance = 0.2;
 // Wall thickness for the rigid funnel body (mm)
 wall_thickness = 2.4;
-// Wall thickness for the flexible inserts (mm)
-flex_wall = 2.0;
-// Thicker wall for the filter pocket housing to make it robust (mm)
-pocket_wall = 3.6;
-
-// --- DERIVED DIMENSIONS ---
-plunger_scrape_di = plunger_di - 0.6; // slightly smaller for tight squeegee fit
-plunger_insert_od = plunger_scrape_di + 2 * flex_wall;
-plunger_flange_od = plunger_insert_od + 4.0;
-plunger_insert_h = 15.0;
-flange_h = 2.0;
-
-chamber_id = plunger_insert_od + clearance * 2;
-flange_id = plunger_flange_od + clearance * 2;
-chamber_h = plunger_insert_h - flange_h;
-
-block_w = filter_di + 12.0;
-block_d = 6.0; // depth of one half (mating makes 12.0)
-block_h = 20.0; // vertical height of the block (was 10.0)
-recess_w = filter_di + 1.0;
-recess_d = 1.5;
-
-pocket_w = block_w + clearance * 2;
-pocket_d = (block_d * 2) + clearance * 2; // 12.4 mm
-pocket_h = block_h + clearance * 2; // 20.4 mm
-
-// pocket position in X (centered on the vertical slot)
-pocket_x_center = 28.0; 
 
 // --- ANIMATION CONTROLS ($t based) ---
 // Set to true in OpenSCAD to preview motion locally
@@ -58,72 +31,67 @@ time_t = undef;
 // Compute final time variable (prioritize command line override, fallback to built-in $t)
 t_val = (time_t != undef) ? time_t : $t;
 
-// Calculate plunger movements:
-// t = 0.0 -> 0.2: inserts plunger down to chamber (z = 100 to z = 54.5)
-// t = 0.2 -> 0.4: twists plunger 180 degrees
-// t = 0.4 -> 0.6: pulls plunger back up to z = 100
-plunger_z = 
-    (t_val < 0.2) ? 100 - (t_val / 0.2) * 45.5 :
-    (t_val < 0.4) ? 54.5 :
-    (t_val < 0.6) ? 54.5 + ((t_val - 0.4) / 0.2) * 45.5 :
-    100;
+// --- ANIMATION PATH MATH ---
+// Plunger phase: t = 0.0 -> 0.5
+// Filter phase:  t = 0.5 -> 1.0
 
-plunger_rot_z = 
-    (t_val >= 0.2 && t_val < 0.4) ? ((t_val - 0.2) / 0.2) * 180 :
-    (t_val >= 0.4) ? 180 :
-    0;
+// Mock Plunger Position
+plunger_visible = (t_val < 0.5);
+plunger_pos = [0, 0, 75];
 
-// Calculate filter movements (Vertical push-up from bottom):
-// t = 0.6 -> 0.75: slides filter from below (z = -20) up into slot (z = 50)
-// t = 0.75 -> 0.9: slides filter back down (to z = -20)
-filter_z = 
-    (t_val < 0.6) ? -20 :
-    (t_val < 0.75) ? -20 + ((t_val - 0.6) / 0.15) * 70 :
-    (t_val < 0.9) ? 50 - ((t_val - 0.75) / 0.15) * 70 :
-    -20;
+// Mock Filter Position
+filter_visible = (t_val >= 0.5);
+filter_pos = [0, 0, 45];
+
+// Scraper Tool Position & Rotation during animation
+scraper_pos = 
+    (t_val < 0.1) ? [-60 + (t_val/0.1)*60, -40, 73] : // approach plunger
+    (t_val < 0.3) ? [0, -40 + ((t_val-0.1)/0.2)*10, 73] : // scrape plunger face (sweep)
+    (t_val < 0.4) ? [0, -30 - ((t_val-0.3)/0.1)*30, 73] : // retract plunger end
+    (t_val < 0.5) ? [0, -60, 73] : // transition pause
+    (t_val < 0.6) ? [60 - ((t_val-0.5)/0.1)*60, 10, 45] : // approach filter
+    (t_val < 0.8) ? [0, 10 + ((t_val-0.6)/0.2)*25, 45] : // slide filter through jaws
+    (t_val < 0.9) ? [0, 35 - ((t_val-0.8)/0.1)*50, 45] : // retract filter end
+    [60, -15, 45]; // return to start
+
+scraper_rot = 
+    (t_val < 0.5) ? [0, 0, 0] : // Plunger scraper end pointing towards plunger (needs 0 rotation since model is aligned)
+    [0, 180, 0]; // Filter scraper end pointing towards filter (flipped 180)
 
 // Run selected part
 if (part == "all") {
     assembly();
 } else if (part == "funnel") {
     funnel_body();
-} else if (part == "plunger_insert") {
-    plunger_insert();
-} else if (part == "filter_insert") {
-    filter_insert_half();
+} else if (part == "scraper") {
+    scraper_tool_open();
 }
 
 module assembly() {
+    // 1. Funnel (Rigid)
     funnel_body();
     
-    // Plunger insert (semi-transparent green)
-    color([0.2, 0.8, 0.2, 0.8])
-        translate([0, 0, 50.0])
-            plunger_insert();
-            
-    // Filter insert back half (semi-transparent blue, translated to pocket floor z=15)
-    color([0.2, 0.2, 0.8, 0.8])
-        translate([pocket_x_center - 3.0, 0, 15.0])
-            rotate([0, 90, 90])
-                filter_insert_half();
-            
-    // Filter insert front half (semi-transparent red, rotated and mated in X)
-    color([0.8, 0.2, 0.2, 0.8])
-        translate([pocket_x_center + 3.0, 0, 15.0])
-            rotate([180, 90, 90])
-                filter_insert_half();
-
-    // Render animated components if animating
+    // 2. Animated Mock Plunger
+    if ((animate || t_val > 0) && plunger_visible) {
+        translate(plunger_pos)
+            mock_plunger();
+    }
+    
+    // 3. Animated Mock Filter
+    if ((animate || t_val > 0) && filter_visible) {
+        translate(filter_pos)
+            mock_filter();
+    }
+    
+    // 4. Animated Scraper Tool (Folded assembly)
     if (animate || t_val > 0) {
-        // Mock Plunger
-        translate([0, 0, plunger_z])
-            rotate([0, 0, plunger_rot_z])
-                mock_plunger();
-                
-        // Mock Metal Filter (oriented vertically in Y-Z plane)
-        translate([pocket_x_center, 0, filter_z])
-            rotate([0, 90, 0])
-                mock_filter();
+        translate(scraper_pos)
+            rotate(scraper_rot)
+                scraper_tool_folded();
+    } else {
+        // Default static view: show the folded scraper floating next to the funnel
+        translate([50, 0, 40])
+            scraper_tool_folded();
     }
 }
 
@@ -147,12 +115,9 @@ module funnel_body() {
                 
             // 5. Ergonomic Rounded Handle (Support-free)
             ergonomic_handle();
-            
-            // 6. Filter Pocket Outer Body (Vertical column, streamlined, beveled, open at +y)
-            vertical_housing_body();
         }
 
-        // Inner Cutouts
+        // Inner Cutouts (Open clear funnel)
         union() {
             // Spout bore
             translate([0, 0, -1])
@@ -162,7 +127,7 @@ module funnel_body() {
             translate([0, 0, 15 - 0.1])
                 cylinder(d1 = 35, d2 = 61, h = 35 + 0.2, $fn = 100);
                 
-            // Lower Chamber bore (fits insert body)
+            // Lower Chamber bore
             translate([0, 0, 50 - 0.1])
                 cylinder(d = 61, h = 11 + 0.2, $fn = 100);
                 
@@ -170,52 +135,10 @@ module funnel_body() {
             translate([0, 0, 61 - 0.1])
                 cylinder(d1 = 61, d2 = 65, h = 2 + 0.2, $fn = 100);
                 
-            // Flange socket bore (fits insert flange)
+            // Flange socket bore
             translate([0, 0, 63 - 0.1])
                 cylinder(d = 65, h = 2.2, $fn = 100);
-                
-            // Keyways at the rim (aligned to Y axis to avoid weakening pocket/handle mounts)
-            translate([0, 0, 64])
-                cube([4.4, 72.0, 2.5], center = true);
-                
-            // Pocket Cavity (Drawer slot open at +y, from z=15 to z=35.4)
-            translate([pocket_x_center, 2.0, 15.0 + pocket_h/2])
-                cube([pocket_d, pocket_w + 4.0, pocket_h + 0.1], center = true);
-                
-            // Vertical Filter Guide Slot (above pocket, z = 35 to z = 66)
-            translate([pocket_x_center, 0, 35.0 + (66-35)/2])
-                cube([3.0, recess_w, 66 - 35 + 0.2], center = true);
-                
-            // Bottom Filter Entry Slot (below pocket, z = 10 to z = 15)
-            translate([pocket_x_center, 0, 10.0 + (15-10)/2])
-                cube([3.0, recess_w, 15 - 10 + 0.2], center = true);
-                
-            // Flared entry under the spout (funnels the filter in)
-            translate([pocket_x_center, 0, 9.9])
-                cylinder(d1 = 8.0, d2 = 3.0, h = 3.0, center = true, $fn = 4);
         }
-    }
-}
-
-module vertical_housing_body() {
-    // Generates a streamlined beveled vertical column on the side of the funnel
-    difference() {
-        // Main vertical column from z=0 to z=65
-        linear_extrude(height = 65.0) {
-            polygon(points = [
-                [18.0, -42.0],
-                [37.0, -37.0],
-                [37.0,  37.0],
-                [18.0,  42.0],
-                [15.0,   0.0]
-            ]);
-        }
-        
-        // 45-degree bottom chamfer cut (completely self-supporting)
-        translate([20.0, 0, 0])
-            rotate([0, -45, 0])
-                translate([-100, -100, -200])
-                    cube([200, 200, 200]);
     }
 }
 
@@ -244,91 +167,127 @@ module ergonomic_handle() {
     }
 }
 
-module pocket_gusset() {
-    // Solid sloped support under the pocket (support-free, from spout to pocket floor)
-    polyhedron(
-        points = [
-            [pocket_x_center - pocket_d/2 - pocket_wall, -pocket_w/2 - pocket_wall, 22.0], // 0
-            [pocket_x_center + pocket_d/2 + pocket_wall, -pocket_w/2 - pocket_wall, 37.5], // 1
-            [pocket_x_center - pocket_d/2 - pocket_wall, -pocket_w/2 - pocket_wall, 37.5], // 2
-            [pocket_x_center - pocket_d/2 - pocket_wall,  pocket_w/2, 22.0], // 3
-            [pocket_x_center + pocket_d/2 + pocket_wall,  pocket_w/2, 37.5], // 4
-            [pocket_x_center - pocket_d/2 - pocket_wall,  pocket_w/2, 37.5]  // 5
-        ],
-        faces = [
-            [0, 2, 1],       // Side 1
-            [3, 4, 5],       // Side 2
-            [0, 1, 4, 3],    // Sloped face
-            [1, 2, 5, 4],    // Top face
-            [0, 3, 5, 2]     // Back face
-        ]
-    );
-}
+// --- FLEXIBLE DUAL-PURPOSE SCRAPER TOOL ---
 
-module plunger_insert() {
-    // 1. Ring Body
-    difference() {
-        union() {
-            cylinder(d = plunger_insert_od, h = plunger_insert_h, $fn = 100);
-            translate([0, 0, plunger_insert_h - flange_h])
-                cylinder(d = plunger_flange_od, h = flange_h, $fn = 100);
-            translate([0, 0, plunger_insert_h - flange_h/2])
-                cube([4.0, plunger_flange_od + 3.8, flange_h], center = true); // key aligned to Y
-        }
-        translate([0, 0, -1])
-            cylinder(d = plunger_scrape_di, h = plunger_insert_h + 2, $fn = 100);
+module scraper_tool_open() {
+    // Renders the tool flat and open for 3D printing (requires zero support)
+    color("green") {
+        // 1. Central Handle
+        translate([-7.5, -25, 0])
+            cube([15, 50, 4]);
             
-        // Top guide chamfer
-        translate([0, 0, plunger_insert_h - 2.0])
-            cylinder(d1 = plunger_scrape_di, d2 = plunger_scrape_di + 2.0, h = 2.1, $fn = 100);
-    }
-    
-    // 2. Scraper Blade
-    difference() {
-        translate([-plunger_scrape_di/2, -1.5, 0])
-            cube([plunger_scrape_di, 3.0, 8.0]);
-            
-        if (plunger_dome_h > 0) {
-            r_scrape = plunger_scrape_di / 2;
-            R_cyl = (r_scrape * r_scrape + plunger_dome_h * plunger_dome_h) / (2 * plunger_dome_h);
-            translate([0, 0, 8.0 + R_cyl - plunger_dome_h])
-                rotate([0, 90, 0])
-                    cylinder(r = R_cyl, h = r_scrape * 3, center = true, $fn = 100);
-        }
+        // 2. Plunger Scraper End (attached at y = -25, sweeps downwards)
+        translate([0, -25, 0])
+            rotate([0, 0, 180])
+                plunger_scraper_end();
+                
+        // 3. Filter Scraper End (attached at y = 25, printed open for living hinge)
+        translate([0, 25, 0])
+            filter_scraper_end_open();
     }
 }
 
-module filter_insert_half() {
-    difference() {
-        // Body block (centered in X and Y locally)
-        translate([-block_w/2, -block_h/2, 0])
-            cube([block_w, block_h, block_d]);
+module scraper_tool_folded() {
+    // Renders the tool in its folded assembly state for visualization
+    color("green") {
+        // 1. Central Handle
+        translate([-7.5, -25, 0])
+            cube([15, 50, 4]);
             
-        // Filter channel recess (centered in X and Y locally)
-        translate([-recess_w/2, -block_h/2 - 1, block_d - recess_d])
-            cube([recess_w, block_h + 2, recess_d + 0.1]);
+        // 2. Plunger Scraper End
+        translate([0, -25, 0])
+            rotate([0, 0, 180])
+                plunger_scraper_end();
+                
+        // 3. Lower Jaw
+        translate([0, 25, 0])
+            difference() {
+                translate([-37, 0, 0])
+                    cube([74, 20, 3]);
+                // Snap holes
+                translate([-34.0, 10.0, -0.5]) cylinder(d = 4.0, h = 4.0, $fn=30);
+                translate([ 34.0, 10.0, -0.5]) cylinder(d = 4.0, h = 4.0, $fn=30);
+            }
+        // Lower Scraper Lip
+        translate([0, 25, 0])
+            hull() {
+                translate([-31.5, 9.0, 3]) cube([63, 2.0, 0.1]);
+                translate([-31.5, 9.5, 4.5]) cube([63, 1.0, 0.1]);
+            }
+        
+        // 4. Folded Hinge Loop Representation
+        translate([-20, 45, 0])
+            cube([40, 1, 6]);
+            
+        // 5. Upper Jaw (Folded over in Z, thickness is z=3.0 -> 6.0)
+        translate([0, 25, 3.0]) {
+            translate([-37, 0, 0])
+                cube([74, 20, 3]);
+            // Upper Scraper Lip (pointing downwards now!)
+            hull() {
+                translate([-31.5, 9.0, 0]) cube([63, 2.0, 0.1]);
+                translate([-31.5, 9.5, -1.5]) cube([63, 1.0, 0.1]);
+            }
+        }
     }
-    
-    // Scraper Lip (thickened and robust, centered locally)
-    // Runs horizontally along X, angled upwards (+Y local)
+}
+
+module plunger_scraper_end() {
+    difference() {
+        // Base block
+        translate([-31, 0, 0])
+            cube([62, 15, 4]);
+        
+        // Subtract plunger seal curve (diameter 57.2, dome height 3.5)
+        r_val = plunger_di / 2;
+        h_dome = plunger_dome_h;
+        R_cyl = (r_val*r_val + h_dome*h_dome) / (2 * h_dome);
+        translate([0, 15 + R_cyl - h_dome, -1])
+            cylinder(r = R_cyl, h = 6, $fn=100);
+    }
+}
+
+module filter_scraper_end_open() {
+    // 1. Lower Jaw
+    difference() {
+        translate([-37, 0, 0])
+            cube([74, 20, 3]);
+        // Snap holes
+        translate([-34.0, 10.0, -0.5]) cylinder(d = 4.0, h = 4.0, $fn=30);
+        translate([ 34.0, 10.0, -0.5]) cylinder(d = 4.0, h = 4.0, $fn=30);
+    }
+    // Lower Scraper Lip (angled upwards)
     hull() {
-        translate([-recess_w/2, -block_h/2 + 1.0, block_d - recess_d])
-            cube([recess_w, 2.2, 0.1]);
-        translate([-recess_w/2, -block_h/2 + 2.5, block_d + 0.1])
-            cube([recess_w, 1.0, 0.1]);
+        translate([-31.5, 9.0, 3]) cube([63, 2.0, 0.1]);
+        translate([-31.5, 9.5, 4.5]) cube([63, 1.0, 0.1]);
     }
+    
+    // 2. Living Hinge (thin 1mm flex strip)
+    translate([-20, 20, 0])
+        cube([40, 6, 1.0]);
+        
+    // 3. Upper Jaw
+    translate([-37, 26, 0])
+        cube([74, 20, 3]);
+    // Upper Scraper Lip
+    hull() {
+        translate([-31.5, 35.0, 3]) cube([63, 2.0, 0.1]);
+        translate([-31.5, 35.5, 4.5]) cube([63, 1.0, 0.1]);
+    }
+    // Snap pegs (press-fit into holes)
+    translate([-34.0, 36.0, 3]) cylinder(d = 3.8, h = 4.5, $fn=30);
+    translate([ 34.0, 36.0, 3]) cylinder(d = 3.8, h = 4.5, $fn=30);
 }
+
+// --- MOCK MODELS FOR ANIMATION PREVIEW ---
 
 module mock_plunger() {
-    // Semi-transparent grey plunger
-    color([0.4, 0.4, 0.4, 0.6]) {
-        // Main body (hollow cylinder look)
+    color([0.5, 0.5, 0.5, 0.6]) {
         difference() {
             cylinder(d = plunger_di, h = 50.0, $fn=100);
             translate([0, 0, -1])
                 cylinder(d = plunger_di - 4.0, h = 48.0, $fn=100);
         }
-        // Plunger face dome (approximated by sphere segment or flat base)
         if (plunger_dome_h > 0) {
             r_val = plunger_di / 2;
             R_sph = (r_val * r_val + plunger_dome_h * plunger_dome_h) / (2 * plunger_dome_h);
@@ -338,10 +297,7 @@ module mock_plunger() {
                 translate([0, 0, -R_sph])
                     cube([R_sph*2 + 10, R_sph*2 + 10, R_sph*2], center=true);
             }
-        } else {
-            cylinder(d = plunger_di, h = 2.0, $fn=100);
         }
-        // Top lip/handle connector
         translate([0, 0, 50.0])
             cylinder(d = plunger_di - 8.0, h = 20.0, $fn=50);
         translate([0, 0, 70.0])
@@ -350,7 +306,6 @@ module mock_plunger() {
 }
 
 module mock_filter() {
-    // Metal disc representation
     color([0.7, 0.7, 0.7, 0.9]) {
         cylinder(d = filter_di, h = filter_thickness, center = true, $fn=100);
     }
