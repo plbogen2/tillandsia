@@ -1,0 +1,49 @@
+name: Export STLs
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install OpenSCAD (Nightly)
+        run: |
+          wget -qO- https://files.openscad.org/OBS-Repository-Key.pub | sudo tee /etc/apt/trusted.gpg.d/obs-openscad-nightly.asc
+          echo "deb https://download.opensuse.org/repositories/home:/t-paul/xUbuntu_24.04/ ./" | sudo tee /etc/apt/sources.list.d/openscad.list
+          sudo apt-get update
+          sudo apt-get install -y openscad-nightly
+
+      - name: Create symlink for openscad
+        run: sudo ln -s /usr/bin/openscad-nightly /usr/local/bin/openscad
+
+      - name: Run Export Script
+        shell: pwsh
+        run: ./export.ps1 -RenderPng
+
+      - name: Upload STLs as Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Aeropress-Desk-Cleaner-STLs
+          path: STLs/*.stl
+
+      - name: Upload PNG Previews
+        uses: actions/upload-artifact@v4
+        with:
+          name: Aeropress-Desk-Cleaner-PNGs
+          path: PNGs/*.png
+
+      - name: Commit Generated Files to Repo
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -f STLs/ PNGs/
+          git diff --quiet && git diff --staged --quiet || git commit -m "chore: auto-generate STLs and PNGs [skip ci]"
+          git push
