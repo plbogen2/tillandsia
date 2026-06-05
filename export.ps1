@@ -125,13 +125,17 @@ if ($RenderGif) {
         $animateArg = "animate=true"
         $tArg = "time_t=$t_val"
         
+        # Spin the camera 360 degrees around Z axis over the animation course
+        $cam_rot_z = 45 + ($i / $frameCount) * 360
+        $cameraVal = "0,0,30,55,0,$cam_rot_z,280"
+        
         $frameArgs = @(
             "-o", $pngFile,
             "-D", $partArg,
             "-D", $animateArg,
             "-D", $tArg,
             "--imgsize", "640,360",
-            "--camera", "0,0,30,55,0,45,280",
+            "--camera", $cameraVal,
             "--colorscheme", "DeepOcean",
             "--enable", "manifold",
             "aeropress_cleaner.scad"
