@@ -123,7 +123,7 @@ if ($RenderGif) {
         
         $partArg = "part=${dq}all${dq}"
         $animateArg = "animate=true"
-        $tArg = "`$t=$t_val"
+        $tArg = "time_t=$t_val"
         
         $frameArgs = @(
             "-o", $pngFile,

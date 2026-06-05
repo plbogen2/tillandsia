@@ -22,6 +22,8 @@ clearance = 0.2;
 wall_thickness = 2.4;
 // Wall thickness for the flexible inserts (mm)
 flex_wall = 2.0;
+// Thicker wall for the filter pocket housing to make it robust (mm)
+pocket_wall = 3.6;
 
 // --- DERIVED DIMENSIONS ---
 plunger_scrape_di = plunger_di - 0.6; // slightly smaller for tight squeegee fit
@@ -36,13 +38,13 @@ chamber_h = plunger_insert_h - flange_h;
 
 block_w = filter_di + 12.0;
 block_d = 12.0;
-block_h = 7.5;
+block_h = 10.0; // thicker block for robustness (was 7.5)
 recess_w = filter_di + 1.0;
-recess_d = 1.5;
+recess_d = 2.0; // deeper recess (was 1.5)
 
 pocket_w = block_w + clearance * 2;
 pocket_d = block_d + clearance * 2;
-pocket_h = (block_h * 2) + clearance * 2;
+pocket_h = block_h * 2; // 20.0 mm height
 
 // pocket position
 pocket_x_center = (flange_id / 2) + wall_thickness + (pocket_d / 2) - 3.0; // overlap slightly for boolean union
@@ -51,28 +53,33 @@ pocket_x_center = (flange_id / 2) + wall_thickness + (pocket_d / 2) - 3.0; // ov
 // Set to true in OpenSCAD to preview motion locally
 animate = false;
 
+// Default override parameter for command-line rendering
+time_t = undef;
+// Compute final time variable (prioritize command line override, fallback to built-in $t)
+t_val = (time_t != undef) ? time_t : $t;
+
 // Calculate plunger movements:
 // t = 0.0 -> 0.2: inserts plunger down to chamber (z = 100 to z = 54.5)
 // t = 0.2 -> 0.4: twists plunger 180 degrees
 // t = 0.4 -> 0.6: pulls plunger back up to z = 100
 plunger_z = 
-    ($t < 0.2) ? 100 - ($t / 0.2) * 45.5 :
-    ($t < 0.4) ? 54.5 :
-    ($t < 0.6) ? 54.5 + (($t - 0.4) / 0.2) * 45.5 :
+    (t_val < 0.2) ? 100 - (t_val / 0.2) * 45.5 :
+    (t_val < 0.4) ? 54.5 :
+    (t_val < 0.6) ? 54.5 + ((t_val - 0.4) / 0.2) * 45.5 :
     100;
 
 plunger_rot_z = 
-    ($t >= 0.2 && $t < 0.4) ? (($t - 0.2) / 0.2) * 180 :
-    ($t >= 0.4) ? 180 :
+    (t_val >= 0.2 && t_val < 0.4) ? ((t_val - 0.2) / 0.2) * 180 :
+    (t_val >= 0.4) ? 180 :
     0;
 
 // Calculate filter movements:
 // t = 0.6 -> 0.75: slides filter from outside (x_center + 60) into slot (x_center - 30)
 // t = 0.75 -> 0.9: slides filter back out (to x_center + 60)
 filter_x = 
-    ($t < 0.6) ? pocket_x_center + 60 :
-    ($t < 0.75) ? (pocket_x_center + 60) - (($t - 0.6) / 0.15) * 90 :
-    ($t < 0.9) ? (pocket_x_center - 30) + (($t - 0.75) / 0.15) * 90 :
+    (t_val < 0.6) ? pocket_x_center + 60 :
+    (t_val < 0.75) ? (pocket_x_center + 60) - ((t_val - 0.6) / 0.15) * 90 :
+    (t_val < 0.9) ? (pocket_x_center - 30) + ((t_val - 0.75) / 0.15) * 90 :
     pocket_x_center + 60;
 
 // Run selected part
@@ -96,24 +103,24 @@ module assembly() {
             
     // Filter insert bottom half (semi-transparent blue)
     color([0.2, 0.2, 0.8, 0.8])
-        translate([pocket_x_center, 0, 49.8])
+        translate([pocket_x_center, 0, 45.0])
             filter_insert_half();
             
     // Filter insert top half (semi-transparent red)
     color([0.8, 0.2, 0.2, 0.8])
-        translate([pocket_x_center, 0, 49.8 + 15.0])
+        translate([pocket_x_center, 0, 65.0])
             rotate([180, 0, 0])
                 filter_insert_half();
 
-    // Render animated components if animating (or if $t is active in OpenSCAD)
-    if (animate || $t > 0) {
+    // Render animated components if animating
+    if (animate || t_val > 0) {
         // Mock Plunger
         translate([0, 0, plunger_z])
             rotate([0, 0, plunger_rot_z])
                 mock_plunger();
                 
         // Mock Metal Filter
-        translate([filter_x, 0, 49.8 + 7.5])
+        translate([filter_x, 0, 55.0])
             mock_filter();
     }
 }
@@ -136,12 +143,12 @@ module funnel_body() {
             translate([0, 0, 52])
                 cylinder(d = 65 + 2 * wall_thickness, h = 13, $fn = 100);
                 
-            // 5. Handle Fin (Support-free)
-            handle_fin();
+            // 5. Ergonomic Rounded Handle (Support-free)
+            ergonomic_handle();
             
             // 6. Filter Pocket Outer Body
-            translate([pocket_x_center, 0, 49.8 + pocket_h/2])
-                cube([pocket_d + 2 * wall_thickness, pocket_w + 2 * wall_thickness, pocket_h], center = true);
+            translate([pocket_x_center, 0, 45.0 + pocket_h/2])
+                cube([pocket_d + 2 * pocket_wall, pocket_w + 2 * pocket_wall, pocket_h], center = true);
                 
             // 7. Pocket Support Gusset
             pocket_gusset();
@@ -174,38 +181,45 @@ module funnel_body() {
                 cube([72.0, 4.4, 2.5], center = true);
                 
             // Pocket Cavity
-            translate([pocket_x_center, 0, 49.8 + pocket_h/2 + 0.1])
+            translate([pocket_x_center, 0, 45.0 + pocket_h/2 + 0.1])
                 cube([pocket_d, pocket_w, pocket_h + 0.2], center = true);
                 
             // Filter Inner Slot (passes into funnel)
-            translate([pocket_x_center - pocket_d/2 - 2.0, 0, 49.8 + 7.5])
+            translate([pocket_x_center - pocket_d/2 - 2.0, 0, 55.0])
                 cube([pocket_d + 4.0, recess_w, 3.0], center = true);
                 
             // Filter Outer Slot (entry from outside)
-            translate([pocket_x_center + pocket_d/2, 0, 49.8 + 7.5])
-                cube([wall_thickness * 3, filter_di + 2.0, 5.0], center = true);
+            translate([pocket_x_center + pocket_d/2, 0, 55.0])
+                cube([pocket_wall * 3, filter_di + 2.0, 5.0], center = true);
                 
             // Support slot on opposite wall (prevents filter bending)
-            translate([-31.0, 0, 49.8 + 7.5])
+            translate([-31.0, 0, 55.0])
                 cube([3.0, recess_w, 3.0], center = true);
         }
     }
 }
 
-module handle_fin() {
-    difference() {
-        // Solid fin block
-        translate([-68.0, -6.0, 12.0])
-            cube([38.0, 12.0, 51.0]);
+module ergonomic_handle() {
+    // Rounded comfortable handle loop (support-free)
+    color("gray") {
+        // 1. Vertical grip cylinder
+        translate([-48, 0, 34])
+            cylinder(d = 16, h = 24, $fn = 50);
             
-        // Finger hole cutout
+        // 2. Top horizontal bracket
         hull() {
-            translate([-49.0, 0, 24.0])
-                rotate([90, 0, 0])
-                    cylinder(d = 18.0, h = 14.0, center = true, $fn = 50);
-            translate([-49.0, 0, 51.0])
-                rotate([90, 0, 0])
-                    cylinder(d = 18.0, h = 14.0, center = true, $fn = 50);
+            translate([-48, 0, 53])
+                cylinder(d = 16, h = 6, $fn = 50);
+            translate([-33, 0, 53])
+                cylinder(d = 16, h = 6, $fn = 50);
+        }
+        
+        // 3. Bottom sloped bracket (45 degrees, self-supporting)
+        hull() {
+            translate([-19.9, 0, 5])
+                cylinder(d = 16, h = 4, $fn = 50);
+            translate([-48, 0, 34])
+                cylinder(d = 16, h = 4, $fn = 50);
         }
     }
 }
@@ -214,12 +228,12 @@ module pocket_gusset() {
     // Solid sloped support under the pocket (support-free)
     polyhedron(
         points = [
-            [pocket_x_center - pocket_d/2 - wall_thickness, -pocket_w/2 - wall_thickness, 35.0], // 0
-            [pocket_x_center + pocket_d/2 + wall_thickness, -pocket_w/2 - wall_thickness, 49.8], // 1
-            [pocket_x_center - pocket_d/2 - wall_thickness, -pocket_w/2 - wall_thickness, 49.8], // 2
-            [pocket_x_center - pocket_d/2 - wall_thickness,  pocket_w/2 + wall_thickness, 35.0], // 3
-            [pocket_x_center + pocket_d/2 + wall_thickness,  pocket_w/2 + wall_thickness, 49.8], // 4
-            [pocket_x_center - pocket_d/2 - wall_thickness,  pocket_w/2 + wall_thickness, 49.8]  // 5
+            [pocket_x_center - pocket_d/2 - pocket_wall, -pocket_w/2 - pocket_wall, 30.0], // 0
+            [pocket_x_center + pocket_d/2 + pocket_wall, -pocket_w/2 - pocket_wall, 45.0], // 1
+            [pocket_x_center - pocket_d/2 - pocket_wall, -pocket_w/2 - pocket_wall, 45.0], // 2
+            [pocket_x_center - pocket_d/2 - pocket_wall,  pocket_w/2 + pocket_wall, 30.0], // 3
+            [pocket_x_center + pocket_d/2 + pocket_wall,  pocket_w/2 + pocket_wall, 45.0], // 4
+            [pocket_x_center - pocket_d/2 - pocket_wall,  pocket_w/2 + pocket_wall, 45.0]  // 5
         ],
         faces = [
             [0, 2, 1],       // Side 1
@@ -275,12 +289,12 @@ module filter_insert_half() {
             cube([recess_w, block_d + 2, recess_d + 0.1]);
     }
     
-    // Scraper Lip (angled for self-supporting print and squeegee action)
+    // Scraper Lip (thickened and robust)
     hull() {
         translate([-recess_w/2, 2.0, block_h - recess_d])
-            cube([recess_w, 1.5, 0.1]);
+            cube([recess_w, 2.2, 0.1]);
         translate([-recess_w/2, 3.5, block_h + 0.1])
-            cube([recess_w, 0.8, 0.1]);
+            cube([recess_w, 1.0, 0.1]);
     }
 }
 
