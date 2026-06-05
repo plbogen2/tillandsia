@@ -81,7 +81,7 @@ foreach ($pName in $parts) {
 
 # 4. RENDER PNG PREVIEW
 if ($RenderPng) {
-    $pngFile = "$pngDir/preview.png"
+    $pngFile = "$pngDir/preview_v2.png"
     Write-Host "Rendering Preview PNG -> $pngFile" -ForegroundColor Yellow
     
     if (Test-Path $pngFile) { Remove-Item $pngFile }
@@ -109,7 +109,7 @@ if ($RenderPng) {
 # 5. RENDER GIF ANIMATIONS (Plunger Scrape & Filter Scrape)
 if ($RenderGif) {
     $animations = @(
-        @{ Name = "plunger_scrape"; Mode = 1; CamDist = 280; Pitch = 55 }
+        @{ Name = "plunger_scrape_v2"; Mode = 1; CamDist = 280; Pitch = 55 }
     )
 
     foreach ($anim in $animations) {

@@ -2,7 +2,7 @@
 
 A compact, 3D-printable, support-free, mechanical tool to clean your Aeropress plunger face directly over your office trash can using a spring-returned pivoted squeegee wiper.
 
-![Plunger Scraping Action](Animation/plunger_scrape.gif)
+![Plunger Scraping Action](Animation/plunger_scrape_v2.gif)
 
 ## How It Works
 *   **Seating the Plunger**: Slide the Plunger Wiper Ring over the end of the Aeropress plunger until the top edge of the plunger seal hits the internal stop ledge.
