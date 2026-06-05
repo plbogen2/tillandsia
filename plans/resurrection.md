@@ -1,61 +1,55 @@
-# Jetski Project Resurrection State: Aeropress Desk Cleaning System (ADCF)
+# Jetski Project Resurrection State: Aeropress Desk Cleaning Funnel (ADCF) - Mechanical Wiper
 
 Use this file to instantly restore context, design knowledge, and execution progress when starting a new session or switching development machines.
 
 ---
 
 ## 1. Project Goal
-Design and print a support-free, office-desk-friendly cleaning system for the **AeroPress** coffee maker that cleans:
-1.  **The Rubber Plunger Seal face & sides** (standard diameter: **57.2mm**, dome: **3.5mm**).
-2.  **The Stainless Steel Metal Filter disc** (standard diameter: **62.0mm**, thickness: **0.3mm**).
+Design and print a support-free, office-desk-friendly cleaning funnel for the **AeroPress** coffee maker plunger face:
+*   Cleans the flat/domed circular plunger seal face (diameter **57.2mm**, dome: **3.5mm**).
+*   Uses a **pivoted squeegee wiper** that sweeps the plunger face mechanically.
+*   Uses a **harvested Mounjaro injection pen spring** (OD ~10mm, free length ~40mm) to automatically return the wiper arm to its parked/home position.
 
 ---
 
-## 2. Selected Architecture: 2-Part Separate Tools (Option B)
-After iterating on an integrated single-tool design, we separated the system into two distinct components. This resolved physical collisions, avoided print overhang/sag issues, and simplified daily usage.
-
-### Part 1: Funnel Body (Rigid - PETG/PLA)
-*   **Role**: Simple, open waste-directing funnel with a comfortable handle. Directs grounds and rinses straight into the trash can.
-*   **Features**:
-    *   No slots, notches, or inner channels (extremely easy to rinse clean).
-    *   Ergonomic, thick, rounded D-loop handle.
-    *   100% support-free slopes (cone angles $\le 45^\circ$, brackets print vertically).
-
-### Part 2: Dual-Purpose Handheld Scraper (Flexible - TPU/Flexible PLA)
-*   **Role**: A single handheld squeegee tool used manually over the funnel.
-*   **Plunger Scraper End**: A U-shaped hook with a concave curve matching the 57.2mm plunger face and sides. Wipes the dome clean in one rotational swipe.
-*   **Filter Scraper End**: A split-jaw squeegee clamp built with a **living hinge**.
-    *   **Flat Print Layout**: Prints completely open and flat on the bed to guarantee the scraping lips print perfectly without sagging or fusing.
-    *   **Snap Pins**: Fold the upper jaw $180^\circ$ over the lower jaw and press-fit the pegs into the holes. This aligns the two squeegee lips face-to-face with a 1mm slot gap.
-    *   **Use**: Push the metal filter disc through the jaws vertically. Wipes both sides clean; grounds fall straight down.
+## 2. Selected Architecture: Spring-Returned Pivoted Wiper Funnel
+Instead of manual handheld scrapers or static inserts, the plunger cleaner is integrated mechanically into the funnel:
+*   **Wiper Arm (Rigid)**: Pivots outside the cone wall on a horizontal axis. A long wiper blade extends through a $90^\circ$ horizontal slot in the cone wall to sweep inside the chamber.
+*   **Wiper Blade (Flexible)**: A TPU squeegee insert slotted into the wiper arm. It stands slightly proud of the arm to press against the plunger face.
+*   **Mounjaro Spring Pocket**: A horizontal housing cylinder on the side of the funnel knuckle. It compresses a single pen spring when you push the wiper lever, providing a clean automatic snap-return.
+*   **Pivot Pin (Rigid)**: Prints horizontally for high shear strength. Locks the wiper arm into the funnel's clevis joints.
 
 ---
 
 ## 3. Parametric Design Values (in `aeropress_cleaner.scad`)
 If you need to customize the sizes:
 *   `plunger_di = 57.2;` (AeroPress plunger seal diameter)
-*   `plunger_dome_h = 3.5;` (dome height)
-*   `filter_di = 62.0;` (metal filter disc diameter)
-*   `filter_thickness = 0.3;` (metal filter thickness)
-*   `wall_thickness = 2.4;` (funnel rigid shell)
+*   `plunger_dome_h = 3.5;` (plunger face dome height)
+*   `spring_od = 10.0;` (Mounjaro pen spring outer diameter)
+*   `spring_len = 40.0;` (Mounjaro pen spring free length)
+*   `pivot_d = 5.0;` (Pivot shaft hinge diameter)
+*   `wall_thickness = 2.4;` (Rigid funnel shell thickness)
 
 ---
 
 ## 4. Repository File Index
-*   [`aeropress_cleaner.scad`](file:///usr/local/google/home/plbogen/github/tillandsia/aeropress_cleaner.scad): Parametric OpenSCAD CAD model. Customizer selects `part="all"`, `part="funnel"`, or `part="scraper"`.
-*   [`export.ps1`](file:///usr/local/google/home/plbogen/github/tillandsia/export.ps1): PowerShell script that exports the STLs and builds the rendering animations.
+*   [`aeropress_cleaner.scad`](file:///usr/local/google/home/plbogen/github/tillandsia/aeropress_cleaner.scad): Parametric OpenSCAD CAD model. Select `part="funnel"`, `part="wiper"`, `part="blade"`, or `part="pin"`.
+*   [`export.ps1`](file:///usr/local/google/home/plbogen/github/tillandsia/export.ps1): PowerShell script that exports the 4 STL parts and renders the plunger scraping animation GIF.
 *   [`.github/workflows/export-stls.yml`](file:///usr/local/google/home/plbogen/github/tillandsia/.github/workflows/export-stls.yml): GitHub Actions CI workflow that automates exporting STLs and rendering preview animations on every push.
-*   [`README.md`](file:///usr/local/google/home/plbogen/github/tillandsia/README.md): Landing page documentation with standard side-by-side animation tables.
-*   [`plans/handoff_transcript.md`](file:///usr/local/google/home/plbogen/github/tillandsia/plans/handoff_transcript.md): Detailed narrative of the engineering decisions during layout changes.
+*   [`README.md`](file:///usr/local/google/home/plbogen/github/tillandsia/README.md): Landing page documentation detailing usage, 3D printing parameters, and assembly.
 
 ---
 
 ## 5. Next Steps for the Developer
-1.  **Monitor the CI Build**: Check that the latest GitHub actions run completes successfully and updates the repository's preview GIFs:
+1.  **Monitor the CI Build**: Check that the latest GitHub Actions run completes successfully and updates the `Animation/plunger_scrape.gif` on the home page:
     *   https://github.com/plbogen2/tillandsia/actions
-2.  **Slicing and Printing**:
-    *   Load `STLs/funnel.stl` into your slicer. Print in PETG or PLA. No supports.
-    *   Load `STLs/scraper.stl` into your slicer. Print in Flexible PLA or TPU. No supports.
+2.  **Slicing and Printing (No support required)**:
+    *   Print `STLs/funnel.stl` in PETG or PLA. Upright (Spout down).
+    *   Print `STLs/wiper.stl` in PETG or PLA. Flat on bed.
+    *   Print `STLs/pin.stl` in PETG or PLA. Flat on bed (horizontal).
+    *   Print `STLs/blade.stl` in Flexible TPU or PLA. Flat on bed.
 3.  **Assembly**:
-    *   Fold the scraper tool's filter end and press the snap pegs into the holes.
-    *   Test squeegeeing actions over the funnel!
+    *   Insert the flexible `blade` into the `wiper` arm's slot.
+    *   Insert the Mounjaro pen spring into the side pocket of the `funnel`.
+    *   Align the wiper knuckle with the funnel knuckles and insert the `pin` from the bottom.
+    *   Verify the smooth spring-return movement and test it on the Aeropress!
