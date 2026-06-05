@@ -1,5 +1,6 @@
 param(
-    [switch]$RenderPng = $false
+    [switch]$RenderPng = $false,
+    [switch]$RenderGif = $false
 )
 
 # 1. FIND OPENSCAD INSTALLATION
@@ -34,9 +35,12 @@ if (!$osPath) {
 # 2. SETUP DIRECTORIES
 $stlDir = "./STLs"
 $pngDir = "./PNGs"
+$gifDir = "./Animation"
+$tempFrameDir = "./temp_frames"
 
 if (!(Test-Path $stlDir)) { New-Item -ItemType Directory -Path $stlDir }
 if ($RenderPng -and !(Test-Path $pngDir)) { New-Item -ItemType Directory -Path $pngDir }
+if ($RenderGif -and !(Test-Path $gifDir)) { New-Item -ItemType Directory -Path $gifDir }
 
 Write-Host "--- Starting Render Loop ---" -ForegroundColor Cyan
 Write-Host "Using OpenSCAD at: $osPath"
@@ -99,6 +103,76 @@ if ($RenderPng) {
     } else {
         Write-Host "  [PNG] Failed" -ForegroundColor Red
     }
+}
+
+# 5. RENDER GIF ANIMATION
+if ($RenderGif) {
+    $gifFile = "$gifDir/aeropress_cleaner.gif"
+    Write-Host "Rendering Animation GIF -> $gifFile" -ForegroundColor Yellow
+    
+    if (Test-Path $tempFrameDir) { Remove-Item -Recurse -Force $tempFrameDir }
+    New-Item -ItemType Directory -Path $tempFrameDir | Out-Null
+    
+    $partArg = "part=${dq}all${dq}"
+    $animateArg = "animate=true"
+    
+    # 40 frames total
+    $gifArgs = @(
+        "-o", "$tempFrameDir/frame_.png",
+        "-D", $partArg,
+        "-D", $animateArg,
+        "--animate", "40",
+        "--imgsize", "640,360",
+        "--camera", "0,0,30,55,0,45,280",
+        "--colorscheme", "DeepOcean",
+        "--enable", "manifold",
+        "aeropress_cleaner.scad"
+    )
+    
+    & $osPath $gifArgs
+    
+    if (Test-Path "$tempFrameDir/frame_0000.png") {
+        Write-Host "  Frames generated. Combining into GIF..." -ForegroundColor Yellow
+        
+        # Check if ffmpeg is available
+        $ffmpegPath = Get-Command ffmpeg -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
+        if ($ffmpegPath) {
+            # Combine using ffmpeg (generates a very clean optimized palette GIF)
+            $ffmpegArgs = @(
+                "-y",
+                "-framerate", "10",
+                "-i", "$tempFrameDir/frame_%04d.png",
+                "-vf", "split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse",
+                $gifFile
+            )
+            & $ffmpegPath $ffmpegArgs | Out-Null
+        } else {
+            # Fallback to ImageMagick's convert
+            $convertPath = Get-Command convert -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
+            if ($convertPath) {
+                $convertArgs = @(
+                    "-delay", "10",
+                    "-loop", "0",
+                    "$tempFrameDir/frame_*.png",
+                    $gifFile
+                )
+                & $convertPath $convertArgs | Out-Null
+            } else {
+                Write-Host "  ERROR: Neither ffmpeg nor convert (ImageMagick) found. Cannot assemble GIF." -ForegroundColor Red
+            }
+        }
+        
+        if ((Test-Path $gifFile) -and (Get-Item $gifFile).Length -gt 0) {
+            Write-Host "  [GIF] Success" -ForegroundColor Green
+        } else {
+            Write-Host "  [GIF] Failed assembling" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "  [GIF] Failed to generate frames" -ForegroundColor Red
+    }
+    
+    # Clean up temp frames
+    if (Test-Path $tempFrameDir) { Remove-Item -Recurse -Force $tempFrameDir }
 }
 
 Write-Host "--- All Processes Complete ---" -ForegroundColor Cyan

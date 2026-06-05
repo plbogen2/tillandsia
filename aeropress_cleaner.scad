@@ -47,6 +47,34 @@ pocket_h = (block_h * 2) + clearance * 2;
 // pocket position
 pocket_x_center = (flange_id / 2) + wall_thickness + (pocket_d / 2) - 3.0; // overlap slightly for boolean union
 
+// --- ANIMATION CONTROLS ($t based) ---
+// Set to true in OpenSCAD to preview motion locally
+animate = false;
+
+// Calculate plunger movements:
+// t = 0.0 -> 0.2: inserts plunger down to chamber (z = 100 to z = 54.5)
+// t = 0.2 -> 0.4: twists plunger 180 degrees
+// t = 0.4 -> 0.6: pulls plunger back up to z = 100
+plunger_z = 
+    ($t < 0.2) ? 100 - ($t / 0.2) * 45.5 :
+    ($t < 0.4) ? 54.5 :
+    ($t < 0.6) ? 54.5 + (($t - 0.4) / 0.2) * 45.5 :
+    100;
+
+plunger_rot_z = 
+    ($t >= 0.2 && $t < 0.4) ? (($t - 0.2) / 0.2) * 180 :
+    ($t >= 0.4) ? 180 :
+    0;
+
+// Calculate filter movements:
+// t = 0.6 -> 0.75: slides filter from outside (x_center + 60) into slot (x_center - 30)
+// t = 0.75 -> 0.9: slides filter back out (to x_center + 60)
+filter_x = 
+    ($t < 0.6) ? pocket_x_center + 60 :
+    ($t < 0.75) ? (pocket_x_center + 60) - (($t - 0.6) / 0.15) * 90 :
+    ($t < 0.9) ? (pocket_x_center - 30) + (($t - 0.75) / 0.15) * 90 :
+    pocket_x_center + 60;
+
 // Run selected part
 if (part == "all") {
     assembly();
@@ -76,6 +104,18 @@ module assembly() {
         translate([pocket_x_center, 0, 49.8 + 15.0])
             rotate([180, 0, 0])
                 filter_insert_half();
+
+    // Render animated components if animating (or if $t is active in OpenSCAD)
+    if (animate || $t > 0) {
+        // Mock Plunger
+        translate([0, 0, plunger_z])
+            rotate([0, 0, plunger_rot_z])
+                mock_plunger();
+                
+        // Mock Metal Filter
+        translate([filter_x, 0, 49.8 + 7.5])
+            mock_filter();
+    }
 }
 
 module funnel_body() {
@@ -241,5 +281,42 @@ module filter_insert_half() {
             cube([recess_w, 1.5, 0.1]);
         translate([-recess_w/2, 3.5, block_h + 0.1])
             cube([recess_w, 0.8, 0.1]);
+    }
+}
+
+module mock_plunger() {
+    // Semi-transparent grey plunger
+    color([0.4, 0.4, 0.4, 0.6]) {
+        // Main body (hollow cylinder look)
+        difference() {
+            cylinder(d = plunger_di, h = 50.0, $fn=100);
+            translate([0, 0, -1])
+                cylinder(d = plunger_di - 4.0, h = 48.0, $fn=100);
+        }
+        // Plunger face dome (approximated by sphere segment or flat base)
+        if (plunger_dome_h > 0) {
+            r_val = plunger_di / 2;
+            R_sph = (r_val * r_val + plunger_dome_h * plunger_dome_h) / (2 * plunger_dome_h);
+            difference() {
+                translate([0, 0, plunger_dome_h - R_sph])
+                    sphere(r = R_sph, $fn=100);
+                translate([0, 0, -R_sph])
+                    cube([R_sph*2 + 10, R_sph*2 + 10, R_sph*2], center=true);
+            }
+        } else {
+            cylinder(d = plunger_di, h = 2.0, $fn=100);
+        }
+        // Top lip/handle connector
+        translate([0, 0, 50.0])
+            cylinder(d = plunger_di - 8.0, h = 20.0, $fn=50);
+        translate([0, 0, 70.0])
+            cylinder(d = plunger_di + 4.0, h = 4.0, $fn=50);
+    }
+}
+
+module mock_filter() {
+    // Metal disc representation
+    color([0.7, 0.7, 0.7, 0.9]) {
+        cylinder(d = filter_di, h = filter_thickness, center = true, $fn=100);
     }
 }

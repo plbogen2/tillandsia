@@ -14,19 +14,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install OpenSCAD (Nightly)
+      - name: Install OpenSCAD (Nightly) and ffmpeg
         run: |
           wget -qO- https://files.openscad.org/OBS-Repository-Key.pub | sudo tee /etc/apt/trusted.gpg.d/obs-openscad-nightly.asc
           echo "deb https://download.opensuse.org/repositories/home:/t-paul/xUbuntu_24.04/ ./" | sudo tee /etc/apt/sources.list.d/openscad.list
           sudo apt-get update
-          sudo apt-get install -y openscad-nightly
+          sudo apt-get install -y openscad-nightly ffmpeg
 
       - name: Create symlink for openscad
         run: sudo ln -s /usr/bin/openscad-nightly /usr/local/bin/openscad
 
       - name: Run Export Script
         shell: pwsh
-        run: ./export.ps1 -RenderPng
+        run: ./export.ps1 -RenderPng -RenderGif
 
       - name: Upload STLs as Artifacts
         uses: actions/upload-artifact@v4
@@ -40,10 +40,16 @@ jobs:
           name: Aeropress-Desk-Cleaner-PNGs
           path: PNGs/*.png
 
+      - name: Upload Animation GIF
+        uses: actions/upload-artifact@v4
+        with:
+          name: Aeropress-Desk-Cleaner-Animation
+          path: Animation/*.gif
+
       - name: Commit Generated Files to Repo
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add -f STLs/ PNGs/
-          git diff --quiet && git diff --staged --quiet || git commit -m "chore: auto-generate STLs and PNGs [skip ci]"
+          git add -f STLs/ PNGs/ Animation/
+          git diff --quiet && git diff --staged --quiet || git commit -m "chore: auto-generate STLs, PNGs, and GIF [skip ci]"
           git push
