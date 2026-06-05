@@ -50,7 +50,7 @@ $dq = [char]34
 
 # 3. RENDER STL PARTS
 $parts = @(
-    "funnel",
+    "ring",
     "wiper",
     "blade",
     "pin"
