@@ -101,15 +101,16 @@ module assembly() {
         translate([0, 0, 50.0])
             plunger_insert();
             
-    // Filter insert bottom half (semi-transparent blue)
+    // Filter insert bottom half (semi-transparent blue, rotated 90 deg to align slots)
     color([0.2, 0.2, 0.8, 0.8])
         translate([pocket_x_center, 0, 37.5])
-            filter_insert_half();
+            rotate([0, 0, 90])
+                filter_insert_half();
             
-    // Filter insert top half (semi-transparent red)
+    // Filter insert top half (semi-transparent red, rotated 90 deg and flipped)
     color([0.8, 0.2, 0.2, 0.8])
         translate([pocket_x_center, 0, 57.5])
-            rotate([180, 0, 0])
+            rotate([180, 0, 90])
                 filter_insert_half();
 
     // Render animated components if animating
@@ -146,9 +147,9 @@ module funnel_body() {
             // 5. Ergonomic Rounded Handle (Support-free)
             ergonomic_handle();
             
-            // 6. Filter Pocket Outer Body (Drawer design, open at +y)
-            translate([pocket_x_center, -pocket_wall/2, 37.5 + pocket_h/2])
-                cube([pocket_d + 2 * pocket_wall, pocket_w + pocket_wall, pocket_h], center = true);
+            // 6. Filter Pocket Outer Body (Streamlined, beveled design, open at +y)
+            translate([0, 0, 37.5])
+                pocket_outer_body_shape();
                 
             // 7. Pocket Support Gusset
             pocket_gusset();
@@ -196,6 +197,19 @@ module funnel_body() {
             translate([-31.0, 0, 47.5])
                 cube([3.0, recess_w, 3.0], center = true);
         }
+    }
+}
+
+module pocket_outer_body_shape() {
+    // Generates a streamlined beveled outer profile for the filter pocket to blend smoothly into the funnel
+    linear_extrude(height = pocket_h) {
+        polygon(points = [
+            [30.0, 37.2],                                         // Inner-front (at funnel wall)
+            [pocket_x_center + pocket_d/2 + pocket_wall, 37.2],   // Outer-front corner (open drawer face)
+            [pocket_x_center + pocket_d/2 + pocket_wall, -37.2],  // Outer-back corner
+            [25.0, -48.0],                                        // Bevel back to funnel wall (smooth transition)
+            [30.0, -48.0]                                         // Inner-back (closed inside funnel wall)
+        ]);
     }
 }
 
@@ -280,20 +294,20 @@ module plunger_insert() {
 
 module filter_insert_half() {
     difference() {
-        // Body block
-        translate([-block_w/2, 0, 0])
+        // Body block (centered in X and Y locally)
+        translate([-block_w/2, -block_d/2, 0])
             cube([block_w, block_d, block_h]);
             
-        // Filter channel recess
-        translate([-recess_w/2, -1, block_h - recess_d])
+        // Filter channel recess (centered in X and Y locally)
+        translate([-recess_w/2, -block_d/2 - 1, block_h - recess_d])
             cube([recess_w, block_d + 2, recess_d + 0.1]);
     }
     
-    // Scraper Lip (thickened and robust)
+    // Scraper Lip (thickened and robust, centered locally)
     hull() {
-        translate([-recess_w/2, 2.0, block_h - recess_d])
+        translate([-recess_w/2, -4.0, block_h - recess_d])
             cube([recess_w, 2.2, 0.1]);
-        translate([-recess_w/2, 3.5, block_h + 0.1])
+        translate([-recess_w/2, -2.5, block_h + 0.1])
             cube([recess_w, 1.0, 0.1]);
     }
 }
