@@ -107,13 +107,13 @@ if ($RenderPng) {
 # 5. RENDER GIF ANIMATIONS (Plunger Scrape & Filter Scrape)
 if ($RenderGif) {
     $animations = @(
-        @{ Name = "plunger_scrape"; Mode = "plunger"; CamDist = 280; Pitch = 55 },
-        @{ Name = "filter_scrape"; Mode = "filter"; CamDist = 280; Pitch = 55 }
+        @{ Name = "plunger_scrape"; Mode = 1; CamDist = 280; Pitch = 55 },
+        @{ Name = "filter_scrape"; Mode = 2; CamDist = 280; Pitch = 55 }
     )
 
     foreach ($anim in $animations) {
         $gifFile = "$gifDir/$($anim.Name).gif"
-        Write-Host "Rendering Animation GIF ($($anim.Mode) mode) -> $gifFile" -ForegroundColor Yellow
+        Write-Host "Rendering Animation GIF (mode=$($anim.Mode)) -> $gifFile" -ForegroundColor Yellow
         
         if (Test-Path $tempFrameDir) { Remove-Item -Recurse -Force $tempFrameDir }
         New-Item -ItemType Directory -Path $tempFrameDir | Out-Null
@@ -127,7 +127,7 @@ if ($RenderGif) {
             $pngFile = "$tempFrameDir/$frameName"
             
             $partArg = "part=${dq}all${dq}"
-            $modeArg = "anim_mode=${dq}$($anim.Mode)${dq}"
+            $modeArg = "anim_mode=$($anim.Mode)"
             $animateArg = "animate=true"
             $tArg = "time_t=$t_val"
             

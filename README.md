@@ -2,11 +2,11 @@
 
 A 3D-printable, support-free, modular tool to clean your Aeropress plunger and metal filter directly at your office desk without needing a sink or running water.
 
-````carousel
-![Plunger Scraping Action](Animation/plunger_scrape.gif)
-<!-- slide -->
-![Filter Scraping Action](Animation/filter_scrape.gif)
-````
+### Preview Animations
+
+| Plunger Cleaning Squeegee | Metal Filter Squeegee |
+| :---: | :---: |
+| ![Plunger Scraping Action](Animation/plunger_scrape.gif) | ![Filter Scraping Action](Animation/filter_scrape.gif) |
 
 ## How It Works
 *   **Plunger Cleaning**: Hold the scraper tool and sweep the curved plunger squeegee end across the rubber plunger face over the funnel. Twist and scrape; grounds fall directly down the funnel spout.

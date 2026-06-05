@@ -23,8 +23,8 @@ filter_thickness = 0.3;
 wall_thickness = 2.4;
 
 // --- ANIMATION CONTROLS ($t based) ---
-// Animation mode: "all" (loops both), "plunger" (plunger only), "filter" (filter only)
-anim_mode = "all"; // [all, plunger, filter]
+// Animation mode: 0 = all (loops both), 1 = plunger (plunger only), 2 = filter (filter only)
+anim_mode = 0; // [0, 1, 2]
 // Set to true in OpenSCAD to preview motion locally
 animate = false;
 
@@ -35,15 +35,15 @@ t_val = (time_t != undef) ? time_t : $t;
 
 // --- ANIMATION PATH MATH ---
 // Set up visibility based on mode
-plunger_visible = (anim_mode == "all" && t_val < 0.5) || (anim_mode == "plunger");
-filter_visible = (anim_mode == "all" && t_val >= 0.5) || (anim_mode == "filter");
+plunger_visible = (anim_mode == 0 && t_val < 0.5) || (anim_mode == 1);
+filter_visible = (anim_mode == 0 && t_val >= 0.5) || (anim_mode == 2);
 
 // Plunger Position (static in its own phase)
 plunger_pos = [0, 0, 75];
 
 // Filter Position (slides vertically up and down in filter mode)
 filter_pos = 
-    (anim_mode == "filter") ? (
+    (anim_mode == 2) ? (
         (t_val < 0.2) ? [0, 0, 45] :
         (t_val < 0.7) ? [0, ((t_val - 0.2)/0.5) * 30, 45] :
         [0, 30 - ((t_val - 0.7)/0.3) * 30, 45]
@@ -51,12 +51,12 @@ filter_pos =
 
 // Scraper Tool Position & Rotation during animation
 scraper_pos = 
-    (anim_mode == "plunger") ? (
+    (anim_mode == 1) ? (
         (t_val < 0.2) ? [-60 + (t_val/0.2)*60, -40, 73] : // approach plunger
         (t_val < 0.7) ? [0, -40 + ((t_val-0.2)/0.5)*10, 73] : // sweep face
         [-60 * ((t_val-0.7)/0.3), -30 - ((t_val-0.7)/0.3)*10, 73] // retract
     ) :
-    (anim_mode == "filter") ? (
+    (anim_mode == 2) ? (
         (t_val < 0.2) ? [60 - (t_val/0.2)*60, 10, 45] : // approach filter
         [0, 10, 45] // stay clamped while filter slides
     ) :
@@ -71,8 +71,8 @@ scraper_pos =
     [60, -15, 45];
 
 scraper_rot = 
-    (anim_mode == "plunger") ? [0, 0, 0] :
-    (anim_mode == "filter") ? [0, 180, 0] :
+    (anim_mode == 1) ? [0, 0, 0] :
+    (anim_mode == 2) ? [0, 180, 0] :
     (t_val < 0.5) ? [0, 0, 0] : [0, 180, 0];
 
 // Run selected part
