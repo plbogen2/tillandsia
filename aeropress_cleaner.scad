@@ -2,7 +2,7 @@
 // Designed for support-free printing.
 // This is a 2-Part System:
 // 1. Funnel Part (Rigid): A simple waste director with handle.
-// 2. Scraper Part (Flexible): A handheld dual-purpose tool (plunger face scraper + metal filter squeegee clamp).
+// 2. Scraper Part (Flexible): A handheld dual-purpose tool (plunger squeegee cup + metal filter squeegee clamp).
 
 // --- PART SELECTOR ---
 // Select which part to render for printing
@@ -21,6 +21,8 @@ filter_thickness = 0.3;
 // --- ADVANCED PARAMETERS (TOLERANCES & WALLS) ---
 // Wall thickness for the rigid funnel body (mm)
 wall_thickness = 2.4;
+// Wall thickness for the flexible cup (mm)
+flex_wall = 2.0;
 
 // --- ANIMATION CONTROLS ($t based) ---
 // Animation mode: 0 = all (loops both), 1 = plunger (plunger only), 2 = filter (filter only)
@@ -38,42 +40,45 @@ t_val = (time_t != undef) ? time_t : $t;
 plunger_visible = (anim_mode == 0 && t_val < 0.5) || (anim_mode == 1);
 filter_visible = (anim_mode == 0 && t_val >= 0.5) || (anim_mode == 2);
 
-// Plunger Position (static in its own phase)
+// Plunger Position (static above funnel)
 plunger_pos = [0, 0, 75];
 
-// Filter Position (slides vertically up and down in filter mode)
+// Filter Position (slides along Y through the scraper jaws in filter mode)
 filter_pos = 
     (anim_mode == 2) ? (
-        (t_val < 0.2) ? [0, 0, 45] :
-        (t_val < 0.7) ? [0, ((t_val - 0.2)/0.5) * 30, 45] :
-        [0, 30 - ((t_val - 0.7)/0.3) * 30, 45]
+        (t_val < 0.2) ? [0, -15, 45] :
+        (t_val < 0.7) ? [0, -15 + ((t_val - 0.2)/0.5) * 40, 45] :
+        [0, 25 - ((t_val - 0.7)/0.3) * 40, 45]
     ) : [0, 0, 45]; // default static
 
 // Scraper Tool Position & Rotation during animation
+// Note: plunger cup center is at local y = -56.6. filter jaw center is at local y = 35.0.
 scraper_pos = 
     (anim_mode == 1) ? (
-        (t_val < 0.2) ? [-60 + (t_val/0.2)*60, -40, 73] : // approach plunger
-        (t_val < 0.7) ? [0, -40 + ((t_val-0.2)/0.5)*10, 73] : // sweep face
-        [-60 * ((t_val-0.7)/0.3), -30 - ((t_val-0.7)/0.3)*10, 73] // retract
+        // Plunger mode: align cup (y = -56.6) with plunger (y = 0)
+        (t_val < 0.2) ? [0, 56.6 - 60 + (t_val/0.2)*60, 73] : // approach plunger
+        (t_val < 0.7) ? [0, 56.6, 73] : // press and wipe
+        [0, 56.6 - 60 * ((t_val-0.7)/0.3), 73] // retract
     ) :
     (anim_mode == 2) ? (
-        (t_val < 0.2) ? [60 - (t_val/0.2)*60, 10, 45] : // approach filter
-        [0, 10, 45] // stay clamped while filter slides
+        // Filter mode: tool is rotated 180 around Z, so local y = 35 becomes y = -35.
+        // Align folded jaw (y = -35) with filter (y = 0)
+        (t_val < 0.2) ? [0, 35 - 50 + (t_val/0.2)*50, 45] : // approach filter
+        [0, 35, 45] // stay clamped while filter slides
     ) :
     // Fallback "all" mode (loops both phases)
-    (t_val < 0.1) ? [-60 + (t_val/0.1)*60, -40, 73] :
-    (t_val < 0.3) ? [0, -40 + ((t_val-0.1)/0.2)*10, 73] :
-    (t_val < 0.4) ? [0, -30 - ((t_val-0.3)/0.1)*30, 73] :
-    (t_val < 0.5) ? [0, -60, 73] :
-    (t_val < 0.6) ? [60 - ((t_val-0.5)/0.1)*60, 10, 45] :
-    (t_val < 0.8) ? [0, 10 + ((t_val-0.6)/0.2)*25, 45] :
-    (t_val < 0.9) ? [0, 35 - ((t_val-0.8)/0.1)*50, 45] :
-    [60, -15, 45];
+    (t_val < 0.1) ? [0, 56.6 - 60 + (t_val/0.1)*60, 73] :
+    (t_val < 0.3) ? [0, 56.6, 73] :
+    (t_val < 0.4) ? [0, 56.6 - 60 * ((t_val-0.3)/0.1)*60, 73] :
+    (t_val < 0.5) ? [0, 0, 73] :
+    (t_val < 0.6) ? [0, 35 - 50 + ((t_val-0.5)/0.1)*50, 45] :
+    (t_val < 0.8) ? [0, 35, 45] :
+    [0, 35 - 50, 45];
 
 scraper_rot = 
     (anim_mode == 1) ? [0, 0, 0] :
-    (anim_mode == 2) ? [0, 180, 0] :
-    (t_val < 0.5) ? [0, 0, 0] : [0, 180, 0];
+    (anim_mode == 2) ? [0, 0, 180] : // rotate 180 around Z to swap ends
+    (t_val < 0.5) ? [0, 0, 0] : [0, 0, 180];
 
 // Run selected part
 if (part == "all") {
@@ -193,11 +198,10 @@ module scraper_tool_open() {
         translate([-7.5, -25, 0])
             cube([15, 50, 4]);
             
-        // 2. Plunger Scraper End (attached at y = -25, sweeps downwards)
-        translate([0, -25, 0])
-            rotate([0, 0, 180])
-                plunger_scraper_end();
-                
+        // 2. Plunger Squeegee Cup (attached at y = -25, centered at y = -56.6)
+        translate([0, -25 - (plunger_di/2 + flex_wall), 0])
+            plunger_scraper_cup();
+            
         // 3. Filter Scraper End (attached at y = 25, printed open for living hinge)
         translate([0, 25, 0])
             filter_scraper_end_open();
@@ -211,10 +215,9 @@ module scraper_tool_folded() {
         translate([-7.5, -25, 0])
             cube([15, 50, 4]);
             
-        // 2. Plunger Scraper End
-        translate([0, -25, 0])
-            rotate([0, 0, 180])
-                plunger_scraper_end();
+        // 2. Plunger Squeegee Cup
+        translate([0, -25 - (plunger_di/2 + flex_wall), 0])
+            plunger_scraper_cup();
                 
         // 3. Lower Jaw
         translate([0, 25, 0])
@@ -249,18 +252,15 @@ module scraper_tool_folded() {
     }
 }
 
-module plunger_scraper_end() {
+module plunger_scraper_cup() {
+    // Shallow flexible cup that scrapes both the circular dome face and outer edge of plunger seal
     difference() {
-        // Base block
-        translate([-31, 0, 0])
-            cube([62, 15, 4]);
+        // Outer cylinder of cup (flat bottom prints cleanly on bed)
+        cylinder(d = plunger_di + 2 * flex_wall, h = 8.0, $fn = 100);
         
-        // Subtract plunger seal curve (diameter 57.2, dome height 3.5)
-        r_val = plunger_di / 2;
-        h_dome = plunger_dome_h;
-        R_cyl = (r_val*r_val + h_dome*h_dome) / (2 * h_dome);
-        translate([0, 15 + R_cyl - h_dome, -1])
-            cylinder(r = R_cyl, h = 6, $fn=100);
+        // Inner cavity (fits snugly over plunger seal to scrape sides)
+        translate([0, 0, 2.0])
+            cylinder(d = plunger_di + 0.4, h = 7.0, $fn = 100);
     }
 }
 
