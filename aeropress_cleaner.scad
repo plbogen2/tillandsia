@@ -98,17 +98,17 @@ module assembly() {
     
     // Plunger insert (semi-transparent green)
     color([0.2, 0.8, 0.2, 0.8])
-        translate([0, 0, 50])
+        translate([0, 0, 50.0])
             plunger_insert();
             
     // Filter insert bottom half (semi-transparent blue)
     color([0.2, 0.2, 0.8, 0.8])
-        translate([pocket_x_center, 0, 45.0])
+        translate([pocket_x_center, 0, 37.5])
             filter_insert_half();
             
     // Filter insert top half (semi-transparent red)
     color([0.8, 0.2, 0.2, 0.8])
-        translate([pocket_x_center, 0, 65.0])
+        translate([pocket_x_center, 0, 57.5])
             rotate([180, 0, 0])
                 filter_insert_half();
 
@@ -120,7 +120,7 @@ module assembly() {
                 mock_plunger();
                 
         // Mock Metal Filter
-        translate([filter_x, 0, 55.0])
+        translate([filter_x, 0, 47.5])
             mock_filter();
     }
 }
@@ -146,9 +146,9 @@ module funnel_body() {
             // 5. Ergonomic Rounded Handle (Support-free)
             ergonomic_handle();
             
-            // 6. Filter Pocket Outer Body
-            translate([pocket_x_center, 0, 45.0 + pocket_h/2])
-                cube([pocket_d + 2 * pocket_wall, pocket_w + 2 * pocket_wall, pocket_h], center = true);
+            // 6. Filter Pocket Outer Body (Drawer design, open at +y)
+            translate([pocket_x_center, -pocket_wall/2, 37.5 + pocket_h/2])
+                cube([pocket_d + 2 * pocket_wall, pocket_w + pocket_wall, pocket_h], center = true);
                 
             // 7. Pocket Support Gusset
             pocket_gusset();
@@ -176,24 +176,24 @@ module funnel_body() {
             translate([0, 0, 63 - 0.1])
                 cylinder(d = 65, h = 2.2, $fn = 100);
                 
-            // Keyways at the rim
+            // Keyways at the rim (aligned to Y axis to avoid weakening pocket/handle mounts)
             translate([0, 0, 64])
-                cube([72.0, 4.4, 2.5], center = true);
+                cube([4.4, 72.0, 2.5], center = true);
                 
-            // Pocket Cavity
-            translate([pocket_x_center, 0, 45.0 + pocket_h/2 + 0.1])
-                cube([pocket_d, pocket_w, pocket_h + 0.2], center = true);
+            // Pocket Cavity (Drawer slot open at +y)
+            translate([pocket_x_center, 2.0, 37.5 + pocket_h/2])
+                cube([pocket_d, pocket_w + 4.0, pocket_h + 0.1], center = true);
                 
             // Filter Inner Slot (passes into funnel)
-            translate([pocket_x_center - pocket_d/2 - 2.0, 0, 55.0])
+            translate([pocket_x_center - pocket_d/2 - 2.0, 0, 47.5])
                 cube([pocket_d + 4.0, recess_w, 3.0], center = true);
                 
             // Filter Outer Slot (entry from outside)
-            translate([pocket_x_center + pocket_d/2, 0, 55.0])
+            translate([pocket_x_center + pocket_d/2, 0, 47.5])
                 cube([pocket_wall * 3, filter_di + 2.0, 5.0], center = true);
                 
             // Support slot on opposite wall (prevents filter bending)
-            translate([-31.0, 0, 55.0])
+            translate([-31.0, 0, 47.5])
                 cube([3.0, recess_w, 3.0], center = true);
         }
     }
@@ -228,12 +228,12 @@ module pocket_gusset() {
     // Solid sloped support under the pocket (support-free)
     polyhedron(
         points = [
-            [pocket_x_center - pocket_d/2 - pocket_wall, -pocket_w/2 - pocket_wall, 30.0], // 0
-            [pocket_x_center + pocket_d/2 + pocket_wall, -pocket_w/2 - pocket_wall, 45.0], // 1
-            [pocket_x_center - pocket_d/2 - pocket_wall, -pocket_w/2 - pocket_wall, 45.0], // 2
-            [pocket_x_center - pocket_d/2 - pocket_wall,  pocket_w/2 + pocket_wall, 30.0], // 3
-            [pocket_x_center + pocket_d/2 + pocket_wall,  pocket_w/2 + pocket_wall, 45.0], // 4
-            [pocket_x_center - pocket_d/2 - pocket_wall,  pocket_w/2 + pocket_wall, 45.0]  // 5
+            [pocket_x_center - pocket_d/2 - pocket_wall, -pocket_w/2 - pocket_wall, 22.0], // 0
+            [pocket_x_center + pocket_d/2 + pocket_wall, -pocket_w/2 - pocket_wall, 37.5], // 1
+            [pocket_x_center - pocket_d/2 - pocket_wall, -pocket_w/2 - pocket_wall, 37.5], // 2
+            [pocket_x_center - pocket_d/2 - pocket_wall,  pocket_w/2, 22.0], // 3
+            [pocket_x_center + pocket_d/2 + pocket_wall,  pocket_w/2, 37.5], // 4
+            [pocket_x_center - pocket_d/2 - pocket_wall,  pocket_w/2, 37.5]  // 5
         ],
         faces = [
             [0, 2, 1],       // Side 1
@@ -253,7 +253,7 @@ module plunger_insert() {
             translate([0, 0, plunger_insert_h - flange_h])
                 cylinder(d = plunger_flange_od, h = flange_h, $fn = 100);
             translate([0, 0, plunger_insert_h - flange_h/2])
-                cube([plunger_flange_od + 3.8, 4.0, flange_h], center = true);
+                cube([4.0, plunger_flange_od + 3.8, flange_h], center = true); // key aligned to Y
         }
         translate([0, 0, -1])
             cylinder(d = plunger_scrape_di, h = plunger_insert_h + 2, $fn = 100);
