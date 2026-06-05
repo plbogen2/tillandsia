@@ -1,0 +1,245 @@
+// OpenSCAD Model for Aeropress Desk Cleaning Funnel (ADCF)
+// Designed for support-free printing.
+
+// --- PART SELECTOR ---
+// Select which part to render for printing
+part = "all"; // [all: Visual Assembly, funnel: Funnel Body (Rigid), plunger_insert: Plunger Squeegee (Flexible), filter_insert: Filter Squeegee Half (Flexible)]
+
+// --- CUSTOMIZABLE PARAMETERS ---
+// Outer diameter of the Aeropress plunger rubber seal (mm)
+plunger_di = 57.2;
+// Depth of the plunger face dome (mm). Use 0 for flat, positive for convex (domed out).
+plunger_dome_h = 3.5;
+// Diameter of the metal filter disc (mm)
+filter_di = 62.0;
+// Thickness of the metal filter disc (mm)
+filter_thickness = 0.3;
+
+// --- ADVANCED PARAMETERS (TOLERANCES & WALLS) ---
+// Clearance between printed parts (mm)
+clearance = 0.2;
+// Wall thickness for the rigid funnel body (mm)
+wall_thickness = 2.4;
+// Wall thickness for the flexible inserts (mm)
+flex_wall = 2.0;
+
+// --- DERIVED DIMENSIONS ---
+plunger_scrape_di = plunger_di - 0.6; // slightly smaller for tight squeegee fit
+plunger_insert_od = plunger_scrape_di + 2 * flex_wall;
+plunger_flange_od = plunger_insert_od + 4.0;
+plunger_insert_h = 15.0;
+flange_h = 2.0;
+
+chamber_id = plunger_insert_od + clearance * 2;
+flange_id = plunger_flange_od + clearance * 2;
+chamber_h = plunger_insert_h - flange_h;
+
+block_w = filter_di + 12.0;
+block_d = 12.0;
+block_h = 7.5;
+recess_w = filter_di + 1.0;
+recess_d = 1.5;
+
+pocket_w = block_w + clearance * 2;
+pocket_d = block_d + clearance * 2;
+pocket_h = (block_h * 2) + clearance * 2;
+
+// pocket position
+pocket_x_center = (flange_id / 2) + wall_thickness + (pocket_d / 2) - 3.0; // overlap slightly for boolean union
+
+// Run selected part
+if (part == "all") {
+    assembly();
+} else if (part == "funnel") {
+    funnel_body();
+} else if (part == "plunger_insert") {
+    plunger_insert();
+} else if (part == "filter_insert") {
+    filter_insert_half();
+}
+
+module assembly() {
+    funnel_body();
+    
+    // Plunger insert (semi-transparent green)
+    color([0.2, 0.8, 0.2, 0.8])
+        translate([0, 0, 50])
+            plunger_insert();
+            
+    // Filter insert bottom half (semi-transparent blue)
+    color([0.2, 0.2, 0.8, 0.8])
+        translate([pocket_x_center, 0, 49.8])
+            filter_insert_half();
+            
+    // Filter insert top half (semi-transparent red)
+    color([0.8, 0.2, 0.2, 0.8])
+        translate([pocket_x_center, 0, 49.8 + 15.0])
+            rotate([180, 0, 0])
+                filter_insert_half();
+}
+
+module funnel_body() {
+    difference() {
+        union() {
+            // 1. Spout
+            cylinder(d = 35 + 2 * wall_thickness, h = 15, $fn = 100);
+            
+            // 2. Cone
+            translate([0, 0, 15])
+                cylinder(d1 = 35 + 2 * wall_thickness, d2 = 61 + 2 * wall_thickness, h = 35, $fn = 100);
+                
+            // 3. Outer transition to chamber
+            translate([0, 0, 50])
+                cylinder(d1 = 61 + 2 * wall_thickness, d2 = 65 + 2 * wall_thickness, h = 2, $fn = 100);
+                
+            // 4. Chamber Outer Cylinder
+            translate([0, 0, 52])
+                cylinder(d = 65 + 2 * wall_thickness, h = 13, $fn = 100);
+                
+            // 5. Handle Fin (Support-free)
+            handle_fin();
+            
+            // 6. Filter Pocket Outer Body
+            translate([pocket_x_center, 0, 49.8 + pocket_h/2])
+                cube([pocket_d + 2 * wall_thickness, pocket_w + 2 * wall_thickness, pocket_h], center = true);
+                
+            // 7. Pocket Support Gusset
+            pocket_gusset();
+        }
+
+        // Inner Cutouts
+        union() {
+            // Spout bore
+            translate([0, 0, -1])
+                cylinder(d = 35, h = 15 + 1.1, $fn = 100);
+                
+            // Cone bore
+            translate([0, 0, 15 - 0.1])
+                cylinder(d1 = 35, d2 = 61, h = 35 + 0.2, $fn = 100);
+                
+            // Lower Chamber bore (fits insert body)
+            translate([0, 0, 50 - 0.1])
+                cylinder(d = 61, h = 11 + 0.2, $fn = 100);
+                
+            // Shoulder taper (self-supporting)
+            translate([0, 0, 61 - 0.1])
+                cylinder(d1 = 61, d2 = 65, h = 2 + 0.2, $fn = 100);
+                
+            // Flange socket bore (fits insert flange)
+            translate([0, 0, 63 - 0.1])
+                cylinder(d = 65, h = 2.2, $fn = 100);
+                
+            // Keyways at the rim
+            translate([0, 0, 64])
+                cube([72.0, 4.4, 2.5], center = true);
+                
+            // Pocket Cavity
+            translate([pocket_x_center, 0, 49.8 + pocket_h/2 + 0.1])
+                cube([pocket_d, pocket_w, pocket_h + 0.2], center = true);
+                
+            // Filter Inner Slot (passes into funnel)
+            translate([pocket_x_center - pocket_d/2 - 2.0, 0, 49.8 + 7.5])
+                cube([pocket_d + 4.0, recess_w, 3.0], center = true);
+                
+            // Filter Outer Slot (entry from outside)
+            translate([pocket_x_center + pocket_d/2, 0, 49.8 + 7.5])
+                cube([wall_thickness * 3, filter_di + 2.0, 5.0], center = true);
+                
+            // Support slot on opposite wall (prevents filter bending)
+            translate([-31.0, 0, 49.8 + 7.5])
+                cube([3.0, recess_w, 3.0], center = true);
+        }
+    }
+}
+
+module handle_fin() {
+    difference() {
+        // Solid fin block
+        translate([-68.0, -6.0, 12.0])
+            cube([38.0, 12.0, 51.0]);
+            
+        // Finger hole cutout
+        hull() {
+            translate([-49.0, 0, 24.0])
+                rotate([90, 0, 0])
+                    cylinder(d = 18.0, h = 14.0, center = true, $fn = 50);
+            translate([-49.0, 0, 51.0])
+                rotate([90, 0, 0])
+                    cylinder(d = 18.0, h = 14.0, center = true, $fn = 50);
+        }
+    }
+}
+
+module pocket_gusset() {
+    // Solid sloped support under the pocket (support-free)
+    polyhedron(
+        points = [
+            [pocket_x_center - pocket_d/2 - wall_thickness, -pocket_w/2 - wall_thickness, 35.0], // 0
+            [pocket_x_center + pocket_d/2 + wall_thickness, -pocket_w/2 - wall_thickness, 49.8], // 1
+            [pocket_x_center - pocket_d/2 - wall_thickness, -pocket_w/2 - wall_thickness, 49.8], // 2
+            [pocket_x_center - pocket_d/2 - wall_thickness,  pocket_w/2 + wall_thickness, 35.0], // 3
+            [pocket_x_center + pocket_d/2 + wall_thickness,  pocket_w/2 + wall_thickness, 49.8], // 4
+            [pocket_x_center - pocket_d/2 - wall_thickness,  pocket_w/2 + wall_thickness, 49.8]  // 5
+        ],
+        faces = [
+            [0, 2, 1],       // Side 1
+            [3, 4, 5],       // Side 2
+            [0, 1, 4, 3],    // Sloped face
+            [1, 2, 5, 4],    // Top face
+            [0, 3, 5, 2]     // Back face
+        ]
+    );
+}
+
+module plunger_insert() {
+    // 1. Ring Body
+    difference() {
+        union() {
+            cylinder(d = plunger_insert_od, h = plunger_insert_h, $fn = 100);
+            translate([0, 0, plunger_insert_h - flange_h])
+                cylinder(d = plunger_flange_od, h = flange_h, $fn = 100);
+            translate([0, 0, plunger_insert_h - flange_h/2])
+                cube([plunger_flange_od + 3.8, 4.0, flange_h], center = true);
+        }
+        translate([0, 0, -1])
+            cylinder(d = plunger_scrape_di, h = plunger_insert_h + 2, $fn = 100);
+            
+        // Top guide chamfer
+        translate([0, 0, plunger_insert_h - 2.0])
+            cylinder(d1 = plunger_scrape_di, d2 = plunger_scrape_di + 2.0, h = 2.1, $fn = 100);
+    }
+    
+    // 2. Scraper Blade
+    difference() {
+        translate([-plunger_scrape_di/2, -1.5, 0])
+            cube([plunger_scrape_di, 3.0, 8.0]);
+            
+        if (plunger_dome_h > 0) {
+            r_scrape = plunger_scrape_di / 2;
+            R_cyl = (r_scrape * r_scrape + plunger_dome_h * plunger_dome_h) / (2 * plunger_dome_h);
+            translate([0, 0, 8.0 + R_cyl - plunger_dome_h])
+                rotate([0, 90, 0])
+                    cylinder(r = R_cyl, h = r_scrape * 3, center = true, $fn = 100);
+        }
+    }
+}
+
+module filter_insert_half() {
+    difference() {
+        // Body block
+        translate([-block_w/2, 0, 0])
+            cube([block_w, block_d, block_h]);
+            
+        // Filter channel recess
+        translate([-recess_w/2, -1, block_h - recess_d])
+            cube([recess_w, block_d + 2, recess_d + 0.1]);
+    }
+    
+    // Scraper Lip (angled for self-supporting print and squeegee action)
+    hull() {
+        translate([-recess_w/2, 2.0, block_h - recess_d])
+            cube([recess_w, 1.5, 0.1]);
+        translate([-recess_w/2, 3.5, block_h + 0.1])
+            cube([recess_w, 0.8, 0.1]);
+    }
+}
