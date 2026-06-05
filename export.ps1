@@ -113,23 +113,33 @@ if ($RenderGif) {
     if (Test-Path $tempFrameDir) { Remove-Item -Recurse -Force $tempFrameDir }
     New-Item -ItemType Directory -Path $tempFrameDir | Out-Null
     
-    $partArg = "part=${dq}all${dq}"
-    $animateArg = "animate=true"
+    $frameCount = 40
+    Write-Host "  Rendering $frameCount frames..." -ForegroundColor Yellow
     
-    # 40 frames total
-    $gifArgs = @(
-        "-o", "$tempFrameDir/frame_.png",
-        "-D", $partArg,
-        "-D", $animateArg,
-        "--animate", "40",
-        "--imgsize", "640,360",
-        "--camera", "0,0,30,55,0,45,280",
-        "--colorscheme", "DeepOcean",
-        "--enable", "manifold",
-        "aeropress_cleaner.scad"
-    )
-    
-    & $osPath $gifArgs
+    for ($i = 0; $i -lt $frameCount; $i++) {
+        $t_val = $i / $frameCount
+        $frameName = "frame_$(($i).ToString('0000')).png"
+        $pngFile = "$tempFrameDir/$frameName"
+        
+        $partArg = "part=${dq}all${dq}"
+        $animateArg = "animate=true"
+        $tArg = "`$t=$t_val"
+        
+        $frameArgs = @(
+            "-o", $pngFile,
+            "-D", $partArg,
+            "-D", $animateArg,
+            "-D", $tArg,
+            "--imgsize", "640,360",
+            "--camera", "0,0,30,55,0,45,280",
+            "--colorscheme", "DeepOcean",
+            "--enable", "manifold",
+            "aeropress_cleaner.scad"
+        )
+        
+        # Render single frame
+        & $osPath $frameArgs | Out-Null
+    }
     
     if (Test-Path "$tempFrameDir/frame_0000.png") {
         Write-Host "  Frames generated. Combining into GIF..." -ForegroundColor Yellow
