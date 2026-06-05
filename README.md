@@ -37,9 +37,9 @@ This model is designed to be **printed completely without supports** when printe
 ## OpenSCAD Customization
 The model is fully parametric. You can customize the dimensions (such as plunger diameter, dome depth, filter diameter, and print clearances) by editing the variables at the top of `aeropress_cleaner.scad` in OpenSCAD Customizer:
 
-*   `plunger_di` (default `57.2` mm)
-*   `plunger_dome_h` (default `3.5` mm)
-*   `filter_di` (default `62.0` mm)
+*   `plunger_di` (default `57.2` mm) — Standard internal brew chamber diameter (referenced from [AeroPress Chamber Dimensions on Reddit](https://www.reddit.com/r/AeroPress/comments/f4i7v8/chamber_dimensions/)).
+*   `plunger_dome_h` (default `3.5` mm) — Curve depth of the rubber plunger seal.
+*   `filter_di` (default `62.0` mm) — Standard reusable stainless steel filter diameter (referenced from [Official AeroPress Reusable Metal Filter specifications](https://aeropress.com/products/aeropress-reusable-metal-filter)).
 *   `clearance` (default `0.2` mm)
 *   `wall_thickness` (default `2.4` mm)
 *   `flex_wall` (default `2.0` mm)
