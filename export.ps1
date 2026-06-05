@@ -51,7 +51,9 @@ $dq = [char]34
 # 3. RENDER STL PARTS
 $parts = @(
     "funnel",
-    "scraper"
+    "wiper",
+    "blade",
+    "pin"
 )
 
 foreach ($pName in $parts) {
@@ -107,8 +109,7 @@ if ($RenderPng) {
 # 5. RENDER GIF ANIMATIONS (Plunger Scrape & Filter Scrape)
 if ($RenderGif) {
     $animations = @(
-        @{ Name = "plunger_scrape"; Mode = 1; CamDist = 280; Pitch = 55 },
-        @{ Name = "filter_scrape"; Mode = 2; CamDist = 280; Pitch = 55 }
+        @{ Name = "plunger_scrape"; Mode = 1; CamDist = 280; Pitch = 55 }
     )
 
     foreach ($anim in $animations) {
