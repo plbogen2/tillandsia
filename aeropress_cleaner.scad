@@ -23,6 +23,8 @@ filter_thickness = 0.3;
 wall_thickness = 2.4;
 
 // --- ANIMATION CONTROLS ($t based) ---
+// Animation mode: "all" (loops both), "plunger" (plunger only), "filter" (filter only)
+anim_mode = "all"; // [all, plunger, filter]
 // Set to true in OpenSCAD to preview motion locally
 animate = false;
 
@@ -32,31 +34,46 @@ time_t = undef;
 t_val = (time_t != undef) ? time_t : $t;
 
 // --- ANIMATION PATH MATH ---
-// Plunger phase: t = 0.0 -> 0.5
-// Filter phase:  t = 0.5 -> 1.0
+// Set up visibility based on mode
+plunger_visible = (anim_mode == "all" && t_val < 0.5) || (anim_mode == "plunger");
+filter_visible = (anim_mode == "all" && t_val >= 0.5) || (anim_mode == "filter");
 
-// Mock Plunger Position
-plunger_visible = (t_val < 0.5);
+// Plunger Position (static in its own phase)
 plunger_pos = [0, 0, 75];
 
-// Mock Filter Position
-filter_visible = (t_val >= 0.5);
-filter_pos = [0, 0, 45];
+// Filter Position (slides vertically up and down in filter mode)
+filter_pos = 
+    (anim_mode == "filter") ? (
+        (t_val < 0.2) ? [0, 0, 45] :
+        (t_val < 0.7) ? [0, ((t_val - 0.2)/0.5) * 30, 45] :
+        [0, 30 - ((t_val - 0.7)/0.3) * 30, 45]
+    ) : [0, 0, 45]; // default static
 
 // Scraper Tool Position & Rotation during animation
 scraper_pos = 
-    (t_val < 0.1) ? [-60 + (t_val/0.1)*60, -40, 73] : // approach plunger
-    (t_val < 0.3) ? [0, -40 + ((t_val-0.1)/0.2)*10, 73] : // scrape plunger face (sweep)
-    (t_val < 0.4) ? [0, -30 - ((t_val-0.3)/0.1)*30, 73] : // retract plunger end
-    (t_val < 0.5) ? [0, -60, 73] : // transition pause
-    (t_val < 0.6) ? [60 - ((t_val-0.5)/0.1)*60, 10, 45] : // approach filter
-    (t_val < 0.8) ? [0, 10 + ((t_val-0.6)/0.2)*25, 45] : // slide filter through jaws
-    (t_val < 0.9) ? [0, 35 - ((t_val-0.8)/0.1)*50, 45] : // retract filter end
-    [60, -15, 45]; // return to start
+    (anim_mode == "plunger") ? (
+        (t_val < 0.2) ? [-60 + (t_val/0.2)*60, -40, 73] : // approach plunger
+        (t_val < 0.7) ? [0, -40 + ((t_val-0.2)/0.5)*10, 73] : // sweep face
+        [-60 * ((t_val-0.7)/0.3), -30 - ((t_val-0.7)/0.3)*10, 73] // retract
+    ) :
+    (anim_mode == "filter") ? (
+        (t_val < 0.2) ? [60 - (t_val/0.2)*60, 10, 45] : // approach filter
+        [0, 10, 45] // stay clamped while filter slides
+    ) :
+    // Fallback "all" mode (loops both phases)
+    (t_val < 0.1) ? [-60 + (t_val/0.1)*60, -40, 73] :
+    (t_val < 0.3) ? [0, -40 + ((t_val-0.1)/0.2)*10, 73] :
+    (t_val < 0.4) ? [0, -30 - ((t_val-0.3)/0.1)*30, 73] :
+    (t_val < 0.5) ? [0, -60, 73] :
+    (t_val < 0.6) ? [60 - ((t_val-0.5)/0.1)*60, 10, 45] :
+    (t_val < 0.8) ? [0, 10 + ((t_val-0.6)/0.2)*25, 45] :
+    (t_val < 0.9) ? [0, 35 - ((t_val-0.8)/0.1)*50, 45] :
+    [60, -15, 45];
 
 scraper_rot = 
-    (t_val < 0.5) ? [0, 0, 0] : // Plunger scraper end pointing towards plunger (needs 0 rotation since model is aligned)
-    [0, 180, 0]; // Filter scraper end pointing towards filter (flipped 180)
+    (anim_mode == "plunger") ? [0, 0, 0] :
+    (anim_mode == "filter") ? [0, 180, 0] :
+    (t_val < 0.5) ? [0, 0, 0] : [0, 180, 0];
 
 // Run selected part
 if (part == "all") {

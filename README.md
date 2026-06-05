@@ -2,11 +2,15 @@
 
 A 3D-printable, support-free, modular tool to clean your Aeropress plunger and metal filter directly at your office desk without needing a sink or running water.
 
-![Aeropress Desk Cleaner Animation](Animation/aeropress_cleaner.gif)
+````carousel
+![Plunger Scraping Action](Animation/plunger_scrape.gif)
+<!-- slide -->
+![Filter Scraping Action](Animation/filter_scrape.gif)
+````
 
 ## How It Works
-*   **Plunger Cleaning**: Push the plunger down into the top chamber of the funnel. A flexible ring squeegees the cylindrical outer walls of the rubber seal, while a contoured blade sweeps the grounds off the convex face. Give it a twist, and the grounds fall straight down into the trash.
-*   **Metal Filter Cleaning**: Slide the metal filter disc horizontally through the side slot. Two overlapping flexible scraper lips wipe the grounds off both sides simultaneously, dropping them down the funnel.
+*   **Plunger Cleaning**: Hold the scraper tool and sweep the curved plunger squeegee end across the rubber plunger face over the funnel. Twist and scrape; grounds fall directly down the funnel spout.
+*   **Metal Filter Cleaning**: Hold the scraper tool and slide your metal filter disc through the folded living-hinge jaws over the funnel. The squeegee lips scrape both sides clean in a single slide, dropping the grounds down the funnel.
 
 ---
 
@@ -16,9 +20,8 @@ This model is designed to be **printed completely without supports** when printe
 
 | Part | Material | Print Orientation | Qty | Notes |
 | :--- | :--- | :--- | :---: | :--- |
-| **Funnel Body** | PETG / PLA | Upright (Spout on bed) | 1 | Tapered walls and bridging handles require no support. |
-| **Plunger Insert** | Flexible PLA / TPU | Flat (Bottom face on bed) | 1 | Snaps into the top funnel chamber (uses alignment tabs). |
-| **Filter Insert Half** | Flexible PLA / TPU | Flat (Mating face on bed) | 2 | Slide both halves into the side pocket. Flipped mating lips create the scraper slot. |
+| **Funnel Body** | PETG / PLA | Upright (Spout on bed) | 1 | Simple waste director funnel. Tapered walls and bridging handles require no support. |
+| **Scraper Tool** | Flexible PLA / TPU | Flat (Mating face on bed) | 1 | Prints completely flat as a single piece. Folds over a living hinge and snaps together. |
 
 ### Settings:
 *   **Rigid parts**: 0.2mm layer height, 3 walls, 15-20% infill.

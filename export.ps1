@@ -104,88 +104,97 @@ if ($RenderPng) {
     }
 }
 
-# 5. RENDER GIF ANIMATION
+# 5. RENDER GIF ANIMATIONS (Plunger Scrape & Filter Scrape)
 if ($RenderGif) {
-    $gifFile = "$gifDir/aeropress_cleaner.gif"
-    Write-Host "Rendering Animation GIF -> $gifFile" -ForegroundColor Yellow
-    
-    if (Test-Path $tempFrameDir) { Remove-Item -Recurse -Force $tempFrameDir }
-    New-Item -ItemType Directory -Path $tempFrameDir | Out-Null
-    
-    $frameCount = 40
-    Write-Host "  Rendering $frameCount frames..." -ForegroundColor Yellow
-    
-    for ($i = 0; $i -lt $frameCount; $i++) {
-        $t_val = $i / $frameCount
-        $frameName = "frame_$(($i).ToString('0000')).png"
-        $pngFile = "$tempFrameDir/$frameName"
+    $animations = @(
+        @{ Name = "plunger_scrape"; Mode = "plunger"; CamDist = 280; Pitch = 55 },
+        @{ Name = "filter_scrape"; Mode = "filter"; CamDist = 280; Pitch = 55 }
+    )
+
+    foreach ($anim in $animations) {
+        $gifFile = "$gifDir/$($anim.Name).gif"
+        Write-Host "Rendering Animation GIF ($($anim.Mode) mode) -> $gifFile" -ForegroundColor Yellow
         
-        $partArg = "part=${dq}all${dq}"
-        $animateArg = "animate=true"
-        $tArg = "time_t=$t_val"
+        if (Test-Path $tempFrameDir) { Remove-Item -Recurse -Force $tempFrameDir }
+        New-Item -ItemType Directory -Path $tempFrameDir | Out-Null
         
-        # Spin the camera 360 degrees around Z axis over the animation course
-        $cam_rot_z = 45 + ($i / $frameCount) * 360
-        $cameraVal = "0,0,30,55,0,$cam_rot_z,280"
+        $frameCount = 40
+        Write-Host "  Rendering $frameCount frames..." -ForegroundColor Yellow
         
-        $frameArgs = @(
-            "-o", $pngFile,
-            "-D", $partArg,
-            "-D", $animateArg,
-            "-D", $tArg,
-            "--imgsize", "640,360",
-            "--camera", $cameraVal,
-            "--colorscheme", "DeepOcean",
-            "--enable", "manifold",
-            "aeropress_cleaner.scad"
-        )
-        
-        # Render single frame
-        & $osPath $frameArgs | Out-Null
-    }
-    
-    if (Test-Path "$tempFrameDir/frame_0000.png") {
-        Write-Host "  Frames generated. Combining into GIF..." -ForegroundColor Yellow
-        
-        # Check if ffmpeg is available
-        $ffmpegPath = Get-Command ffmpeg -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
-        if ($ffmpegPath) {
-            # Combine using ffmpeg (generates a very clean optimized palette GIF)
-            $ffmpegArgs = @(
-                "-y",
-                "-framerate", "10",
-                "-i", "$tempFrameDir/frame_%04d.png",
-                "-vf", "split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse",
-                $gifFile
+        for ($i = 0; $i -lt $frameCount; $i++) {
+            $t_val = $i / $frameCount
+            $frameName = "frame_$(($i).ToString('0000')).png"
+            $pngFile = "$tempFrameDir/$frameName"
+            
+            $partArg = "part=${dq}all${dq}"
+            $modeArg = "anim_mode=${dq}$($anim.Mode)${dq}"
+            $animateArg = "animate=true"
+            $tArg = "time_t=$t_val"
+            
+            # Spin the camera 360 degrees around Z axis over the animation course
+            $cam_rot_z = 45 + ($i / $frameCount) * 360
+            $cameraVal = "0,0,30,$($anim.Pitch),0,$cam_rot_z,$($anim.CamDist)"
+            
+            $frameArgs = @(
+                "-o", $pngFile,
+                "-D", $partArg,
+                "-D", $modeArg,
+                "-D", $animateArg,
+                "-D", $tArg,
+                "--imgsize", "640,360",
+                "--camera", $cameraVal,
+                "--colorscheme", "DeepOcean",
+                "--enable", "manifold",
+                "aeropress_cleaner.scad"
             )
-            & $ffmpegPath $ffmpegArgs | Out-Null
-        } else {
-            # Fallback to ImageMagick's convert
-            $convertPath = Get-Command convert -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
-            if ($convertPath) {
-                $convertArgs = @(
-                    "-delay", "10",
-                    "-loop", "0",
-                    "$tempFrameDir/frame_*.png",
+            
+            # Render single frame
+            & $osPath $frameArgs | Out-Null
+        }
+        
+        if (Test-Path "$tempFrameDir/frame_0000.png") {
+            Write-Host "  Frames generated. Combining into GIF..." -ForegroundColor Yellow
+            
+            # Check if ffmpeg is available
+            $ffmpegPath = Get-Command ffmpeg -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
+            if ($ffmpegPath) {
+                # Combine using ffmpeg (generates a very clean optimized palette GIF)
+                $ffmpegArgs = @(
+                    "-y",
+                    "-framerate", "10",
+                    "-i", "$tempFrameDir/frame_%04d.png",
+                    "-vf", "split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse",
                     $gifFile
                 )
-                & $convertPath $convertArgs | Out-Null
+                & $ffmpegPath $ffmpegArgs | Out-Null
             } else {
-                Write-Host "  ERROR: Neither ffmpeg nor convert (ImageMagick) found. Cannot assemble GIF." -ForegroundColor Red
+                # Fallback to ImageMagick's convert
+                $convertPath = Get-Command convert -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
+                if ($convertPath) {
+                    $convertArgs = @(
+                        "-delay", "10",
+                        "-loop", "0",
+                        "$tempFrameDir/frame_*.png",
+                        $gifFile
+                    )
+                    & $convertPath $convertArgs | Out-Null
+                } else {
+                    Write-Host "  ERROR: Neither ffmpeg nor convert (ImageMagick) found. Cannot assemble GIF." -ForegroundColor Red
+                }
             }
+            
+            if ((Test-Path $gifFile) -and (Get-Item $gifFile).Length -gt 0) {
+                Write-Host "  [GIF] Success: $gifFile" -ForegroundColor Green
+            } else {
+                Write-Host "  [GIF] Failed assembling: $gifFile" -ForegroundColor Red
+            }
+        } else {
+            Write-Host "  [GIF] Failed to generate frames for $($anim.Name)" -ForegroundColor Red
         }
         
-        if ((Test-Path $gifFile) -and (Get-Item $gifFile).Length -gt 0) {
-            Write-Host "  [GIF] Success" -ForegroundColor Green
-        } else {
-            Write-Host "  [GIF] Failed assembling" -ForegroundColor Red
-        }
-    } else {
-        Write-Host "  [GIF] Failed to generate frames" -ForegroundColor Red
+        # Clean up temp frames
+        if (Test-Path $tempFrameDir) { Remove-Item -Recurse -Force $tempFrameDir }
     }
-    
-    # Clean up temp frames
-    if (Test-Path $tempFrameDir) { Remove-Item -Recurse -Force $tempFrameDir }
 }
 
 Write-Host "--- All Processes Complete ---" -ForegroundColor Cyan
