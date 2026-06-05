@@ -64,7 +64,8 @@ module assembly() {
     ring_body();
     
     // 2. Wiper Arm & Blade (Animated rotation around Z at pivot_x, pivot_y)
-    translate([pivot_x, pivot_y, -2.0]) {
+    // Translated to z = -4.0 to fit inside the knuckles slot (z = -4.0 -> 0.0)
+    translate([pivot_x, pivot_y, -4.0]) {
         rotate([0, 0, wiper_angle]) {
             color("green") wiper_arm();
             color("blue") wiper_blade();
@@ -72,8 +73,9 @@ module assembly() {
     }
     
     // 3. Pivot Pin (Rigid)
+    // Translated to z = -10.0 so the pin head sits flush against bottom knuckle (z = -8.0)
     color("gray")
-        translate([pivot_x, pivot_y, -7.0])
+        translate([pivot_x, pivot_y, -10.0])
             pivot_pin();
             
     // 4. Mock Plunger (Animated)
@@ -120,7 +122,6 @@ module ring_body() {
                 cylinder(d = plunger_di + 0.3, h = 15.0 + 1.1, $fn = 100);
                 
             // Stop Ledge (internal flange, ID 53.0, z = 15 -> 17)
-            // Has 45-degree chamfers on both sides for printability and smooth fit
             translate([0, 0, 14.9])
                 cylinder(d1 = plunger_di + 0.3, d2 = 53.0, h = 2.1, $fn = 100);
             translate([0, 0, 17.0])
@@ -176,14 +177,15 @@ module wiper_arm() {
 module wiper_blade() {
     // Flexible TPU squeegee blade
     // Fits into the wiper arm slot and extends upwards to scrape the plunger face.
+    // Total height is shortened to 3.2mm to give exactly 1.0mm overlap against the plunger face.
     rotate([0, 0, 90])
         translate([-0.75, 10.0, 1.8]) {
-            // Base slot block
-            cube([1.5, 47.0, 4.5]);
-            // Tapered wiper tip
+            // Base slot block (2.2mm fits the slot depth)
+            cube([1.5, 47.0, 2.2]);
+            // Tapered wiper tip (1.0mm sticks out)
             hull() {
-                translate([0, 0, 4.5]) cube([1.5, 47.0, 0.1]);
-                translate([0.5, 0, 5.5]) cube([0.5, 47.0, 0.1]);
+                translate([0, 0, 2.2]) cube([1.5, 47.0, 0.1]);
+                translate([0.5, 0, 3.2]) cube([0.5, 47.0, 0.1]);
             }
         }
 }
