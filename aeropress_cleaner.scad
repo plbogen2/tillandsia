@@ -1,12 +1,11 @@
 // OpenSCAD Model for Aeropress Plunger Wiper Ring (ADCR)
-// Simplified 2-Part Mechanical System with Shroud and Wide Slot:
+// Simplified 2-Part Mechanical System with Shroud and M3 Metal Pivot Screw:
 // 1. Ring Body (Rigid): 35mm tall collar with 330-degree slot and internal stop ledge.
 // 2. Wiper Arm (Rigid): Long pivoted lever (65mm) that completely crosses the plunger.
 // 3. Wiper Blade (Flexible): 57mm TPU blade pointing upwards, starts 8mm from pivot.
-// 4. Pivot Pin (Rigid): Secures wiper arm to ring.
 
 // --- PART SELECTOR ---
-part = "all"; // [all: Visual Assembly, ring: Ring Body (Rigid), wiper: Wiper Arm (Rigid), blade: Wiper Blade (Flexible), pin: Pivot Pin (Rigid)]
+part = "all"; // [all: Visual Assembly, ring: Ring Body (Rigid), wiper: Wiper Arm (Rigid), blade: Wiper Blade (Flexible)]
 
 // --- CUSTOMIZABLE PARAMETERS ---
 plunger_di = 57.2;
@@ -16,10 +15,13 @@ plunger_dome_h = 3.5;
 wall_thickness = 3.0; // thick walls for robust ring
 clearance = 0.2;
 
-// Hinge/Pivot geometry
+// Hinge/Pivot geometry (M3 Metal Screw Pivot)
 pivot_x = -35.0;
 pivot_y = 0.0;
-pivot_d = 5.0; // 5mm pivot pin
+screw_tap_d = 2.8;     // M3 threads tap directly into plastic
+screw_clearance_d = 3.3; // loose fit for smooth pivot rotation
+screw_head_d = 6.0;    // recess for M3 socket head cap screw
+screw_head_h = 2.5;
 
 // Spring peg positions (Moved Ring Post to [-55, -12] to avoid over-center locking)
 ring_post_x = -55.0;
@@ -55,8 +57,6 @@ if (part == "all") {
     wiper_arm();
 } else if (part == "blade") {
     wiper_blade();
-} else if (part == "pin") {
-    pivot_pin();
 }
 
 module assembly() {
@@ -72,10 +72,9 @@ module assembly() {
         }
     }
     
-    // 3. Pivot Pin (Rigid)
-    color("gray")
-        translate([pivot_x, pivot_y, -14.0])
-            pivot_pin();
+    // 3. M3 Metal Pivot Screw (Rigid)
+    translate([pivot_x, pivot_y, -12.0])
+        mock_m3_screw(len = 12.0);
             
     // 4. Mock Plunger (Animated)
     if (animate || t_val > 0) {
@@ -185,9 +184,18 @@ module ring_body() {
                 ]);
             }
                 
-            // Hinge Pin Bore (Z span: z = -13 -> 1)
-            translate([pivot_x, pivot_y, -13.0])
-                cylinder(d = pivot_d + clearance * 2, h = 14.0, $fn = 50);
+            // M3 Screw Pivot holes:
+            // 1. Tap Hole in upper knuckle (z = -4.1 -> 0.1)
+            translate([pivot_x, pivot_y, -4.1])
+                cylinder(d = screw_tap_d, h = 4.2, $fn = 30);
+                
+            // 2. Clearance Hole in lower knuckle (z = -12.1 -> -7.9)
+            translate([pivot_x, pivot_y, -12.1])
+                cylinder(d = screw_clearance_d, h = 4.2, $fn = 30);
+                
+            // 3. Head Recess at bottom of lower knuckle (z = -12.1 -> -9.5)
+            translate([pivot_x, pivot_y, -12.1])
+                cylinder(d = screw_head_d, h = screw_head_h + 0.1, $fn = 30);
         }
     }
 }
@@ -215,9 +223,9 @@ module wiper_arm() {
                 cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
         }
 
-        // Pin Hole
+        // Pin Hole (Clearance fit for M3 screw)
         translate([0, 0, -1])
-            cylinder(d = pivot_d + clearance * 2, h = 6, $fn = 50);
+            cylinder(d = screw_clearance_d, h = 6, $fn = 30);
             
         // Wiper Blade slot (width 1.5mm, depth 2.2mm, z = 1.8 -> 4.0)
         // Shifted to start at local x = 8.0 to completely clear the 12mm pivot knuckle.
@@ -242,10 +250,15 @@ module wiper_blade() {
     }
 }
 
-module pivot_pin() {
-    cylinder(d = 10.0, h = 2.0, $fn = 50);
-    translate([0, 0, 2.0])
-        cylinder(d = pivot_d - clearance, h = 12.0, $fn = 50);
+module mock_m3_screw(len = 12.0) {
+    color("silver") {
+        // Head recess sits at z = -12 -> -9.5, so screw head sits here pointing down.
+        // Rendering socket head cap screw head (D=5.5, H=3.0) sticking out 0.5mm below knuckle
+        translate([0, 0, -2.5])
+            cylinder(d = 5.5, h = 3.0, $fn = 20);
+        // Screw shaft going up into the upper knuckle
+        cylinder(d = 3.0, h = len, $fn = 20);
+    }
 }
 
 // --- MOCK PLUNGER ---

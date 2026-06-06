@@ -52,8 +52,7 @@ $dq = [char]34
 $parts = @(
     "ring",
     "wiper",
-    "blade",
-    "pin"
+    "blade"
 )
 
 foreach ($pName in $parts) {
