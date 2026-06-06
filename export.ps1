@@ -66,7 +66,6 @@ foreach ($pName in $parts) {
     $stlArgs = @(
         "-o", $stlFile,
         "-D", $partArg,
-        "--enable", "manifold",
         "aeropress_cleaner.scad"
     )
     
@@ -93,7 +92,6 @@ if ($RenderPng) {
         "--imgsize", "1280,720",
         "--camera", "0,0,30,55,0,45,300",
         "--colorscheme", "DeepOcean",
-        "--enable", "manifold",
         "aeropress_cleaner.scad"
     )
     
