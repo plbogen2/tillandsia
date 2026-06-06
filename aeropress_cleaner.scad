@@ -1,8 +1,8 @@
 // OpenSCAD Model for Aeropress Plunger Wiper Ring (ADCR)
-// Simplified 2-Part Mechanical System with Shroud and Slot:
-// 1. Ring Body (Rigid): 30mm tall collar with bottom-left slot and spring bracket.
-// 2. Wiper Arm (Rigid): Short pivoted lever (reaches center only) with spring peg.
-// 3. Wiper Blade (Flexible): 30mm TPU blade pointing upwards.
+// Simplified 2-Part Mechanical System with Shroud and Wide Slot:
+// 1. Ring Body (Rigid): 30mm tall collar with 230-degree slot and bottom-left spring bracket.
+// 2. Wiper Arm (Rigid): Long pivoted lever (65mm) that completely crosses the plunger.
+// 3. Wiper Blade (Flexible): 60mm TPU blade pointing upwards.
 // 4. Pivot Pin (Rigid): Secures wiper arm to ring.
 
 // --- PART SELECTOR ---
@@ -21,9 +21,9 @@ pivot_x = -35.0;
 pivot_y = 0.0;
 pivot_d = 5.0; // 5mm pivot pin
 
-// Spring peg positions
+// Spring peg positions (Moved Ring Post to [-55, -12] to avoid over-center locking)
 ring_post_x = -55.0;
-ring_post_y = 12.0;
+ring_post_y = -12.0;
 spring_peg_d = 6.0; // fits inside 8mm ID spring
 
 // --- ANIMATION CONTROLS ---
@@ -33,12 +33,12 @@ t_val = (time_t != undef) ? time_t : $t;
 
 // Wiper Angle Animation:
 // t = 0.0 -> 0.2: Wiper parks at -90 degrees (idle)
-// t = 0.2 -> 0.5: Wiper sweeps to 0 degrees (compressing spring)
+// t = 0.2 -> 0.5: Wiper sweeps to +45 degrees (compressing spring, crossing plunger)
 // t = 0.5 -> 0.8: Wiper returns to -90 degrees (spring release)
 wiper_angle = 
     (t_val < 0.2) ? -90 :
-    (t_val < 0.5) ? -90 + ((t_val - 0.2) / 0.3) * 90 :
-    (t_val < 0.8) ? 0 - ((t_val - 0.5) / 0.3) * 90 :
+    (t_val < 0.5) ? -90 + ((t_val - 0.2) / 0.3) * 135 :
+    (t_val < 0.8) ? 45 - ((t_val - 0.5) / 0.3) * 135 :
     -90;
 
 // Plunger insertion animation
@@ -154,7 +154,7 @@ module ring_body() {
                 cylinder(d = pivot_d + clearance * 2, h = 14.0, $fn = 50);
                 
             // Horizontal Slot in ring wall for arm to sweep (Z span: z = -8 -> -4)
-            // Corrected Sector for bottom-left quadrant: -185 to -105 degrees around origin
+            // Sector: -185 to +45 degrees around origin (230-degree continuous cut)
             translate([0, 0, -8.0]) {
                 intersection() {
                     difference() {
@@ -165,8 +165,11 @@ module ring_body() {
                         polygon([
                             [0, 0],
                             [50*cos(-185), 50*sin(-185)],
-                            [50*cos(-145), 50*sin(-145)],
-                            [50*cos(-105), 50*sin(-105)]
+                            [50*cos(-135), 50*sin(-135)],
+                            [50*cos(-90), 50*sin(-90)],
+                            [50*cos(-45), 50*sin(-45)],
+                            [50*cos(0), 50*sin(0)],
+                            [50*cos(45), 50*sin(45)]
                         ]);
                     }
                 }
@@ -178,16 +181,16 @@ module ring_body() {
 module wiper_arm() {
     // Rigid wiper lever arm (printed flat)
     // Local origin [0,0,0] is the pivot point.
-    // Shortened to 35mm total length so it only reaches the center axis.
+    // Extended back to 65mm total length to completely cross the plunger face.
     difference() {
         union() {
             // Knuckle (middle pivot block: z = 0.2 -> 3.8)
             translate([0, 0, 0.2])
                 cylinder(d = 11.6, h = 3.6, $fn = 50);
                 
-            // Wiper Arm pointing along +X locally (length 35.0mm)
+            // Wiper Arm pointing along +X locally (length 65.0mm)
             translate([0, -2.5, 0.2])
-                cube([35.0, 5.0, 3.6]);
+                cube([65.0, 5.0, 3.6]);
                 
             // Lever Extension pointing along -X locally (length 20.0mm)
             translate([-20.0, -4.0, 0.2])
@@ -203,23 +206,23 @@ module wiper_arm() {
             cylinder(d = pivot_d + clearance * 2, h = 6, $fn = 50);
             
         // Wiper Blade slot (width 1.5mm, depth 2.2mm, z = 1.8 -> 4.0)
-        // Starts at x = 5.0, length is 30.0mm (reaches x = 35.0 at the tip)
+        // Starts at x = 5.0, length is 60.0mm (reaches x = 65.0 at the tip)
         translate([5.0, -0.75, 1.8])
-            cube([30.0, 1.5, 2.2]);
+            cube([60.0, 1.5, 2.2]);
     }
 }
 
 module wiper_blade() {
     // Flexible TPU squeegee blade
     // Fits into the wiper arm slot and extends upwards to scrape the plunger face.
-    // Total length is 30.0mm (reaches center + overlap).
+    // Total length is 60.0mm.
     // Total height is 8.0mm (2.2mm in slot, 5.8mm sticking out).
     translate([5.0, -0.75, 1.8]) {
         // Base slot block
-        cube([30.0, 1.5, 2.2]);
+        cube([60.0, 1.5, 2.2]);
         // Squeegee flap (5.8mm sticks out, total height 8.0mm)
         translate([0, 0, 2.2])
-            cube([30.0, 1.0, 5.8]);
+            cube([60.0, 1.0, 5.8]);
     }
 }
 
