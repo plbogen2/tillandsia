@@ -169,14 +169,14 @@ module ring_body() {
             translate([0, 0, 2.5]) {
                 difference() {
                     hull() {
-                        translate([-22.0, 22.0, 0])
-                            cylinder(d = 16.0, h = 35.0, center = true, $fn = 50);
-                        translate([-56.0, 40.0, 0])
-                            cylinder(d = 18.0, h = 35.0, center = true, $fn = 50);
+                        translate([-22.0, -22.0, 0])
+                            cylinder(d = 30.0, h = 35.0, center = true, $fn = 50);
+                        translate([-56.0, -40.0, 0])
+                            cylinder(d = 22.0, h = 35.0, center = true, $fn = 50);
                     }
-                    // 20mm Finger Grip Hole
-                    translate([-39.0, 31.0, 0])
-                        cylinder(d = 20.0, h = 37.0, center = true, $fn = 50);
+                    // 18mm Finger Grip Hole (leaves ~4mm thick walls)
+                    translate([-39.0, -31.0, 0])
+                        cylinder(d = 18.0, h = 37.0, center = true, $fn = 50);
                 }
             }
         }
