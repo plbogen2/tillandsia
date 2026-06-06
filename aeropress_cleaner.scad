@@ -100,7 +100,6 @@ module assembly() {
 }
 
 module ring_body() {
-    // 1. Base Ring with knuckles and cutouts (including the slot)
     difference() {
         union() {
             // Main ring cylinder (height 35mm, from z = -15 to +20)
@@ -112,6 +111,22 @@ module ring_body() {
                 cylinder(d = 12.0, h = 4.0, $fn = 50);
             translate([pivot_x, pivot_y, -4.0])
                 cylinder(d = 12.0, h = 4.0, $fn = 50);
+                
+            // Bracket for stationary Spring Post (above arm sweep, z = 0 -> 4)
+            translate([0, 0, 0.0]) {
+                hull() {
+                    translate([pivot_x, pivot_y, 0]) cylinder(d = 12.0, h = 4.0, $fn = 50);
+                    translate([ring_post_x, ring_post_y, 0]) cylinder(d = 12.0, h = 4.0, $fn = 50);
+                }
+            }
+            
+            // Stationary Spring Post extending down (z = -8 -> 0)
+            translate([ring_post_x, ring_post_y, -8.0]) {
+                cylinder(d = 12.0, h = 8.0, $fn = 50);
+                // Vertical spring peg pointing up (z = -8 -> -2)
+                translate([0, 0, 2.0])
+                    cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
+            }
             
             // Grip Tab
             translate([plunger_di/2 + wall_thickness - 2.0, -10.0, -10.0])
@@ -141,39 +156,30 @@ module ring_body() {
                 cylinder(d = pivot_d + clearance * 2, h = 14.0, $fn = 50);
                 
             // Horizontal Slot in ring wall for arm to sweep (Z span: z = -8 -> -4)
-            // Formed by subtracting a convex 30-degree wedge from a cylinder to avoid triangulation errors
+            // Sector: -225 to +105 degrees around origin (330-degree continuous cut)
+            // Polygon vertices offset from [0,0] to prevent rendering spikes/singularities in OpenSCAD
             translate([0, 0, -8.0]) {
-                difference() {
-                    cylinder(d = plunger_di + 2*wall_thickness + 10.0, h = 4.0, $fn=100);
-                    linear_extrude(height = 4.2, center=false) {
+                intersection() {
+                    difference() {
+                        cylinder(d = plunger_di + 2*wall_thickness + 5.0, h = 4.0, $fn=100);
+                        cylinder(d = plunger_di - 2.0, h = 6.0, center=true, $fn=100);
+                    }
+                    linear_extrude(height = 4.0) {
                         polygon([
-                            [0, 0],
+                            [-10.0, -10.0],
+                            [75*cos(-225), 75*sin(-225)],
+                            [75*cos(-180), 75*sin(-180)],
+                            [75*cos(-135), 75*sin(-135)],
+                            [75*cos(-90), 75*sin(-90)],
+                            [75*cos(-45), 75*sin(-45)],
+                            [75*cos(0), 75*sin(0)],
+                            [75*cos(45), 75*sin(45)],
                             [75*cos(105), 75*sin(105)],
-                            [75*cos(120), 75*sin(120)],
-                            [75*cos(135), 75*sin(135)]
+                            [-10.0, 10.0]
                         ]);
                     }
                 }
             }
-        }
-    }
-    
-    // 2. Add the Spring Bracket and Post AFTER the difference to protect them from the slot cut
-    union() {
-        // Bracket (z = 0 -> 4)
-        translate([0, 0, 0.0]) {
-            hull() {
-                translate([pivot_x, pivot_y, 0]) cylinder(d = 12.0, h = 4.0, $fn = 50);
-                translate([ring_post_x, ring_post_y, 0]) cylinder(d = 12.0, h = 4.0, $fn = 50);
-            }
-        }
-        
-        // Stationary Spring Post extending down (z = -8 -> 0)
-        translate([ring_post_x, ring_post_y, -8.0]) {
-            cylinder(d = 12.0, h = 8.0, $fn = 50);
-            // Vertical spring peg pointing up (z = -8 -> -2)
-            translate([0, 0, 2.0])
-                cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
         }
     }
 }
