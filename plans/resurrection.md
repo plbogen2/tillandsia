@@ -49,7 +49,8 @@ Design and print support-free, office-desk-friendly cleaning tools for the **Aer
 ## 4. Repository File Index
 *   [`aeropress_cleaner.scad`](file:///usr/local/google/home/plbogen/github/tillandsia/aeropress_cleaner.scad): Plunger cleaner CAD model.
 *   [`filter_cleaner.scad`](file:///usr/local/google/home/plbogen/github/tillandsia/filter_cleaner.scad): Metal filter cleaner CAD model.
-*   [`export.ps1`](file:///usr/local/google/home/plbogen/github/tillandsia/export.ps1): PowerShell script that exports all STLs and renders the plunger and filter animations.
+*   [`export.ps1`](file:///usr/local/google/home/plbogen/github/tillandsia/export.ps1): PowerShell script that exports all STLs and renders the plunger and filter animations (for Windows and CI).
+*   [`export.sh`](file:///usr/local/google/home/plbogen/github/tillandsia/export.sh): Bash shell script that does the same (for native gLinux/Linux execution).
 *   [`README.md`](file:///usr/local/google/home/plbogen/github/tillandsia/README.md): Landing page documentation detailing assembly and print guidelines.
 
 ---
