@@ -141,20 +141,18 @@ module ring_body() {
                 cylinder(d = pivot_d + clearance * 2, h = 14.0, $fn = 50);
                 
             // Horizontal Slot in ring wall for arm to sweep (Z span: z = -8 -> -4)
-            // Simplified to a solid 75mm radius wedge cutout to prevent coplanar rendering glitches
+            // Formed by subtracting a convex 30-degree wedge from a cylinder to avoid triangulation errors
             translate([0, 0, -8.0]) {
-                linear_extrude(height = 4.0) {
-                    polygon([
-                        [0, 0],
-                        [75*cos(-225), 75*sin(-225)],
-                        [75*cos(-180), 75*sin(-180)],
-                        [75*cos(-135), 75*sin(-135)],
-                        [75*cos(-90), 75*sin(-90)],
-                        [75*cos(-45), 75*sin(-45)],
-                        [75*cos(0), 75*sin(0)],
-                        [75*cos(45), 75*sin(45)],
-                        [75*cos(105), 75*sin(105)]
-                    ]);
+                difference() {
+                    cylinder(d = plunger_di + 2*wall_thickness + 10.0, h = 4.0, $fn=100);
+                    linear_extrude(height = 4.2, center=false) {
+                        polygon([
+                            [0, 0],
+                            [75*cos(105), 75*sin(105)],
+                            [75*cos(120), 75*sin(120)],
+                            [75*cos(135), 75*sin(135)]
+                        ]);
+                    }
                 }
             }
         }
