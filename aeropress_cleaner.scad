@@ -1,6 +1,6 @@
 // OpenSCAD Model for Aeropress Plunger Wiper Ring (ADCR)
 // Simplified 2-Part Mechanical System with Shroud and Wide Slot:
-// 1. Ring Body (Rigid): 30mm tall collar with 230-degree slot and bottom-left spring bracket.
+// 1. Ring Body (Rigid): 35mm tall collar with 330-degree slot and internal stop ledge.
 // 2. Wiper Arm (Rigid): Long pivoted lever (65mm) that completely crosses the plunger.
 // 3. Wiper Blade (Flexible): 60mm TPU blade pointing upwards.
 // 4. Pivot Pin (Rigid): Secures wiper arm to ring.
@@ -102,9 +102,9 @@ module assembly() {
 module ring_body() {
     difference() {
         union() {
-            // Main ring cylinder (height 30mm, from z = -15 to +15)
+            // Main ring cylinder (height 35mm, from z = -15 to +20)
             translate([0, 0, -15.0])
-                cylinder(d = plunger_di + 2 * wall_thickness, h = 30.0, $fn = 100);
+                cylinder(d = plunger_di + 2 * wall_thickness, h = 35.0, $fn = 100);
             
             // Knuckles (Double shear clevis joint)
             translate([pivot_x, pivot_y, -12.0])
@@ -143,18 +143,21 @@ module ring_body() {
             translate([0, 0, -15.1])
                 cylinder(d = plunger_di + 0.3, h = 15.2, $fn = 100);
                 
-            // Stop Ledge (internal flange, ID 53.0, z = 15 -> 17)
+            // Stop Ledge (internal flange, ID 53.0, z = 15 -> 18)
+            // Chamfered to print support-free and guide plunger smoothly
             translate([0, 0, 14.9])
                 cylinder(d1 = plunger_di + 0.3, d2 = 53.0, h = 2.1, $fn = 100);
             translate([0, 0, 17.0])
-                cylinder(d = 53.0, h = 4.1, $fn = 100);
+                cylinder(d = 53.0, h = 1.1, $fn = 100);
+            translate([0, 0, 18.0])
+                cylinder(d1 = 53.0, d2 = plunger_di + 0.3, h = 2.1, $fn = 100);
                 
             // Hinge Pin Bore (Z span: z = -13 -> 1)
             translate([pivot_x, pivot_y, -13.0])
                 cylinder(d = pivot_d + clearance * 2, h = 14.0, $fn = 50);
                 
             // Horizontal Slot in ring wall for arm to sweep (Z span: z = -8 -> -4)
-            // Sector: -185 to +45 degrees around origin (230-degree continuous cut)
+            // Corrected Sector for full sweep: -225 to +105 degrees around origin (330-degree continuous cut)
             translate([0, 0, -8.0]) {
                 intersection() {
                     difference() {
@@ -164,12 +167,14 @@ module ring_body() {
                     linear_extrude(height = 4.0) {
                         polygon([
                             [0, 0],
-                            [50*cos(-185), 50*sin(-185)],
+                            [50*cos(-225), 50*sin(-225)],
+                            [50*cos(-180), 50*sin(-180)],
                             [50*cos(-135), 50*sin(-135)],
                             [50*cos(-90), 50*sin(-90)],
                             [50*cos(-45), 50*sin(-45)],
                             [50*cos(0), 50*sin(0)],
-                            [50*cos(45), 50*sin(45)]
+                            [50*cos(45), 50*sin(45)],
+                            [50*cos(105), 50*sin(105)]
                         ]);
                     }
                 }
