@@ -1,8 +1,8 @@
 // OpenSCAD Model for Aeropress Plunger Wiper Ring (ADCR)
 // Simplified 2-Part Mechanical System with Shroud and Slot:
-// 1. Ring Body (Rigid): 30mm tall collar with slot and bracket for spring post.
-// 2. Wiper Arm (Rigid): Pivoted lever with spring peg and slot for blade.
-// 3. Wiper Blade (Flexible): Curved TPU blade pointing upwards.
+// 1. Ring Body (Rigid): 30mm tall collar with bottom-left slot and spring bracket.
+// 2. Wiper Arm (Rigid): Short pivoted lever (reaches center only) with spring peg.
+// 3. Wiper Blade (Flexible): 30mm TPU blade pointing upwards.
 // 4. Pivot Pin (Rigid): Secures wiper arm to ring.
 
 // --- PART SELECTOR ---
@@ -63,7 +63,7 @@ module assembly() {
     // 1. Ring Body (Rigid)
     ring_body();
     
-    // 2. Wiper Arm & Blade (Animated rotation around Z at pivot_x, pivot_y)
+    // 2. Wiper Arm & Blade (Animated rotation Z at pivot_x, pivot_y)
     // Wiper arm sits at z = -8.0 -> -4.0 (inside clevis joint)
     translate([pivot_x, pivot_y, -8.0]) {
         rotate([0, 0, wiper_angle]) {
@@ -73,7 +73,6 @@ module assembly() {
     }
     
     // 3. Pivot Pin (Rigid)
-    // Pin head at bottom (z = -14.0)
     color("gray")
         translate([pivot_x, pivot_y, -14.0])
             pivot_pin();
@@ -83,9 +82,7 @@ module assembly() {
         translate([0, 0, plunger_z])
             mock_plunger();
             
-        // Mock Spring (Animated compression between Ring Post and Lever Peg)
-        // Ring Post is at [-55, 12, -6]
-        // Lever Peg is at [pivot_x + 15*cos(wiper_angle+180), pivot_y + 15*sin(wiper_angle+180), -6]
+        // Mock Spring (Animated compression)
         lever_peg_x = pivot_x + 15 * cos(wiper_angle + 180);
         lever_peg_y = pivot_y + 15 * sin(wiper_angle + 180);
         
@@ -110,15 +107,12 @@ module ring_body() {
                 cylinder(d = plunger_di + 2 * wall_thickness, h = 30.0, $fn = 100);
             
             // Knuckles (Double shear clevis joint)
-            // Lower knuckle: z = -12 -> -8
-            // Upper knuckle: z = -4 -> 0
             translate([pivot_x, pivot_y, -12.0])
                 cylinder(d = 12.0, h = 4.0, $fn = 50);
             translate([pivot_x, pivot_y, -4.0])
                 cylinder(d = 12.0, h = 4.0, $fn = 50);
                 
-            // Bracket for stationary Spring Post (above arm sweep)
-            // Z span: z = 0 -> 4
+            // Bracket for stationary Spring Post (above arm sweep, z = 0 -> 4)
             translate([0, 0, 0.0]) {
                 hull() {
                     translate([pivot_x, pivot_y, 0]) cylinder(d = 12.0, h = 4.0, $fn = 50);
@@ -126,8 +120,7 @@ module ring_body() {
                 }
             }
             
-            // Stationary Spring Post extending down from the bracket
-            // Z span: z = -8 -> 0
+            // Stationary Spring Post extending down (z = -8 -> 0)
             translate([ring_post_x, ring_post_y, -8.0]) {
                 cylinder(d = 12.0, h = 8.0, $fn = 50);
                 // Vertical spring peg pointing up (z = -8 -> -2)
@@ -161,7 +154,7 @@ module ring_body() {
                 cylinder(d = pivot_d + clearance * 2, h = 14.0, $fn = 50);
                 
             // Horizontal Slot in ring wall for arm to sweep (Z span: z = -8 -> -4)
-            // Sector: -95 to +10 degrees
+            // Corrected Sector for bottom-left quadrant: -185 to -105 degrees around origin
             translate([0, 0, -8.0]) {
                 intersection() {
                     difference() {
@@ -171,10 +164,9 @@ module ring_body() {
                     linear_extrude(height = 4.0) {
                         polygon([
                             [0, 0],
-                            [50*cos(-95), 50*sin(-95)],
-                            [50*cos(-45), 50*sin(-45)],
-                            [50*cos(0), 50*sin(0)],
-                            [50*cos(10), 50*sin(10)]
+                            [50*cos(-185), 50*sin(-185)],
+                            [50*cos(-145), 50*sin(-145)],
+                            [50*cos(-105), 50*sin(-105)]
                         ]);
                     }
                 }
@@ -186,18 +178,18 @@ module ring_body() {
 module wiper_arm() {
     // Rigid wiper lever arm (printed flat)
     // Local origin [0,0,0] is the pivot point.
-    // Z span: z = 0 -> 3.6 (actual z in assembly will be z_assembly + z_local)
+    // Shortened to 35mm total length so it only reaches the center axis.
     difference() {
         union() {
             // Knuckle (middle pivot block: z = 0.2 -> 3.8)
             translate([0, 0, 0.2])
                 cylinder(d = 11.6, h = 3.6, $fn = 50);
                 
-            // Wiper Arm pointing along +X locally (length 58.0mm)
+            // Wiper Arm pointing along +X locally (length 35.0mm)
             translate([0, -2.5, 0.2])
-                cube([58.0, 5.0, 3.6]);
+                cube([35.0, 5.0, 3.6]);
                 
-            // Lever Extension pointing along -X locally (opposite to wiper arm)
+            // Lever Extension pointing along -X locally (length 20.0mm)
             translate([-20.0, -4.0, 0.2])
                 cube([20.0, 8.0, 3.6]);
                 
@@ -211,28 +203,27 @@ module wiper_arm() {
             cylinder(d = pivot_d + clearance * 2, h = 6, $fn = 50);
             
         // Wiper Blade slot (width 1.5mm, depth 2.2mm, z = 1.8 -> 4.0)
-        translate([10.0, -0.75, 1.8])
-            cube([47.0, 1.5, 2.2]);
+        // Starts at x = 5.0, length is 30.0mm (reaches x = 35.0 at the tip)
+        translate([5.0, -0.75, 1.8])
+            cube([30.0, 1.5, 2.2]);
     }
 }
 
 module wiper_blade() {
     // Flexible TPU squeegee blade
     // Fits into the wiper arm slot and extends upwards to scrape the plunger face.
+    // Total length is 30.0mm (reaches center + overlap).
     // Total height is 8.0mm (2.2mm in slot, 5.8mm sticking out).
-    // The top edge should have a convex curve matching the plunger dome,
-    // but a flat blade that flexes is also very effective. Let's make it flat for printability.
-    translate([10.0, -0.75, 1.8]) {
-        // Base slot block (2.2mm fits the slot depth)
-        cube([47.0, 1.5, 2.2]);
+    translate([5.0, -0.75, 1.8]) {
+        // Base slot block
+        cube([30.0, 1.5, 2.2]);
         // Squeegee flap (5.8mm sticks out, total height 8.0mm)
         translate([0, 0, 2.2])
-            cube([47.0, 1.0, 5.8]);
+            cube([30.0, 1.0, 5.8]);
     }
 }
 
 module pivot_pin() {
-    // Rigid pin to secure the hinge (head thickness 2.0, shaft length 12.0)
     cylinder(d = 10.0, h = 2.0, $fn = 50);
     translate([0, 0, 2.0])
         cylinder(d = pivot_d - clearance, h = 12.0, $fn = 50);
