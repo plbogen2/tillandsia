@@ -10,6 +10,7 @@ part = "all"; // [all: Visual Assembly, ring: Ring Body (Rigid), wiper: Wiper Ar
 // --- CUSTOMIZABLE PARAMETERS ---
 plunger_di = 57.2;
 plunger_dome_h = 3.5;
+left_handed = true; // Set to true for mirrored left-handed version
 
 // --- ADVANCED PARAMETERS ---
 wall_thickness = 3.0; // thick walls for robust ring
@@ -49,14 +50,22 @@ plunger_z =
     (t_val < 0.8) ? 0.0 :
     ((t_val - 0.8)/0.2)*60;
 
+module mirrored_layout() {
+    if (left_handed) {
+        mirror([1, 0, 0]) children();
+    } else {
+        children();
+    }
+}
+
 if (part == "all") {
-    assembly();
+    mirrored_layout() assembly();
 } else if (part == "ring") {
-    ring_body();
+    mirrored_layout() ring_body();
 } else if (part == "wiper") {
-    wiper_arm();
+    mirrored_layout() wiper_arm();
 } else if (part == "blade") {
-    wiper_blade();
+    mirrored_layout() wiper_blade();
 }
 
 module assembly() {
