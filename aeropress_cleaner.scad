@@ -156,9 +156,15 @@ module ring_body() {
                     cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
             }
             
-            // 5. Grip Tab - protected
-            translate([plunger_di/2 + wall_thickness - 2.0, -10.0, -10.0])
-                cube([8.0, 20.0, 20.0]);
+            // 5. Large Ergonomic Grip Wing - protected (full height, support-free)
+            translate([0, 0, 2.5]) {
+                hull() {
+                    translate([plunger_di/2 + wall_thickness - 1.0, 0, 0])
+                        cylinder(d = 20.0, h = 35.0, center = true, $fn = 50);
+                    translate([plunger_di/2 + wall_thickness + 12.0, 0, 0])
+                        cylinder(d = 16.0, h = 35.0, center = true, $fn = 50);
+                }
+            }
         }
 
         // SUBTRACT internal bores and holes from the entire assembly
