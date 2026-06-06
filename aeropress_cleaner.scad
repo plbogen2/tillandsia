@@ -165,18 +165,30 @@ module ring_body() {
                     cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
             }
             
-            // 5. Large Ergonomic Grip Loop - protected (full height, support-free, left-side pivot match)
-            translate([0, 0, 2.5]) {
+            // 5. Large Ergonomic Grip Loop - protected (support-free, left-side pivot match)
+            // Height 28mm, centered at z=11.0 (spans z = -3.0 -> +25.0, completely clears the wiper arm at z <= -4.2)
+            translate([0, 0, 11.0]) {
                 difference() {
+                    // Solid Wing Frame (slightly smaller footprint for neatness)
                     hull() {
                         translate([-22.0, -22.0, 0])
-                            cylinder(d = 30.0, h = 35.0, center = true, $fn = 50);
+                            cylinder(d = 28.0, h = 28.0, center = true, $fn = 50);
                         translate([-56.0, -40.0, 0])
-                            cylinder(d = 22.0, h = 35.0, center = true, $fn = 50);
+                            cylinder(d = 20.0, h = 28.0, center = true, $fn = 50);
                     }
-                    // 18mm Finger Grip Hole (leaves ~4mm thick walls)
-                    translate([-39.0, -31.0, 0])
-                        cylinder(d = 18.0, h = 37.0, center = true, $fn = 50);
+                    // Horizontal Finger Grip Hole (D=18mm, pointing along 150 degrees, perpendicular to 240 deg handle axis)
+                    rotate([0, 90, -30]) 
+                        cylinder(d = 18.0, h = 50.0, center = true, $fn = 50);
+                }
+            }
+
+            // 6. Upper Knuckle Support Bracket (spans z = 0 -> 20, bridges upper knuckle to upper ring wall)
+            translate([0, 0, 0.0]) {
+                hull() {
+                    translate([pivot_x, pivot_y, 0])
+                        cylinder(d = 12.0, h = 20.0, $fn = 50);
+                    translate([-(plunger_di/2 + wall_thickness - 1.0), 0, 0])
+                        cylinder(d = 8.0, h = 20.0, $fn = 50);
                 }
             }
         }
