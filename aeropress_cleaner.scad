@@ -144,12 +144,17 @@ module ring_body() {
                 cylinder(d = plunger_di + 0.3, h = 15.2, $fn = 100);
                 
             // Stop Ledge (internal flange, ID 53.0, z = 15 -> 18)
-            translate([0, 0, 14.9])
-                cylinder(d1 = plunger_di + 0.3, d2 = 53.0, h = 2.1, $fn = 100);
-            translate([0, 0, 17.0])
-                cylinder(d = 53.0, h = 1.1, $fn = 100);
-            translate([0, 0, 18.0])
-                cylinder(d1 = 53.0, d2 = plunger_di + 0.3, h = 2.1, $fn = 100);
+            // Modeled as a single rotate_extrude to prevent coincident face rendering artifacts
+            rotate_extrude($fn = 100) {
+                polygon([
+                    [0, 14.9],
+                    [(plunger_di + 0.3)/2, 14.9],
+                    [53.0/2, 17.0],
+                    [53.0/2, 18.0],
+                    [(plunger_di + 0.3)/2, 20.1],
+                    [0, 20.1]
+                ]);
+            }
                 
             // Hinge Pin Bore (Z span: z = -13 -> 1)
             translate([pivot_x, pivot_y, -13.0])
