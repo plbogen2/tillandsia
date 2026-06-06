@@ -156,12 +156,12 @@ module ring_body() {
                     cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
             }
             
-            // 5. Large Ergonomic Grip Wing - protected (full height, support-free)
+            // 5. Large Ergonomic Grip Wing - protected (full height, support-free, left-side pivot match)
             translate([0, 0, 2.5]) {
                 hull() {
-                    translate([plunger_di/2 + wall_thickness - 1.0, 0, 0])
-                        cylinder(d = 20.0, h = 35.0, center = true, $fn = 50);
-                    translate([plunger_di/2 + wall_thickness + 12.0, 0, 0])
+                    translate([-22.0, 22.0, 0])
+                        cylinder(d = 12.0, h = 35.0, center = true, $fn = 50);
+                    translate([-42.0, 32.0, 0])
                         cylinder(d = 16.0, h = 35.0, center = true, $fn = 50);
                 }
             }
