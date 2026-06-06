@@ -40,7 +40,7 @@ fi
 
 # Plunger Cleaner Project
 scad_plunger="aeropress_cleaner.scad"
-parts_plunger=("ring" "wiper" "blade")
+parts_plunger=("ring" "wiper" "trigger" "blade")
 png_plunger="preview_v2"
 cam_png_plunger="0,0,30,55,0,45,300"
 gif_plunger="plunger_scrape_v2"

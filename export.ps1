@@ -54,6 +54,7 @@ $projects = @(
         Parts = @(
             @{ Name = "ring"; StlName = "ring" },
             @{ Name = "wiper"; StlName = "wiper" },
+            @{ Name = "trigger"; StlName = "trigger" },
             @{ Name = "blade"; StlName = "blade" }
         )
         PngName = "preview_v2"

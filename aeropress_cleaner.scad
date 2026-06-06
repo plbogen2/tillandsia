@@ -5,7 +5,7 @@
 // 3. Wiper Blade (Flexible): 57mm TPU blade pointing upwards, starts 8mm from pivot.
 
 // --- PART SELECTOR ---
-part = "all"; // [all: Visual Assembly, ring: Ring Body (Rigid), wiper: Wiper Arm (Rigid), blade: Wiper Blade (Flexible)]
+part = "all"; // [all: Visual Assembly, ring: Ring Body (Rigid), wiper: Wiper Arm (Rigid), trigger: Trigger Lever (Rigid), blade: Wiper Blade (Flexible)]
 
 // --- CUSTOMIZABLE PARAMETERS ---
 plunger_di = 57.2;
@@ -19,14 +19,17 @@ clearance = 0.2;
 // Hinge/Pivot geometry (M3 Metal Screw Pivot)
 pivot_x = -35.0;
 pivot_y = 0.0;
+trigger_pivot_x = -71.0;
+trigger_pivot_y = 0.0;
+
 screw_tap_d = 2.8;     // M3 threads tap directly into plastic
 screw_clearance_d = 3.3; // loose fit for smooth pivot rotation
 screw_head_d = 6.0;    // recess for M3 socket head cap screw
 screw_head_h = 2.5;
 
-// Spring peg positions (Moved Ring Post to [-55, -12] to avoid over-center locking)
-ring_post_x = -55.0;
-ring_post_y = -12.0;
+// Handle and Spring peg positions
+stationary_handle_x = -105.0;
+stationary_handle_y = -15.0;
 spring_peg_d = 6.0; // fits inside 8mm ID spring
 
 // --- ANIMATION CONTROLS ---
@@ -43,6 +46,10 @@ wiper_angle =
     (t_val < 0.5) ? -90 + ((t_val - 0.2) / 0.3) * 135 :
     (t_val < 0.8) ? 45 - ((t_val - 0.5) / 0.3) * 135 :
     -90;
+
+// Trigger Angle Animation: Squeezes clockwise from -90 -> -135 linked to wiper (ratio 3:1)
+trigger_angle = -90.0 - (wiper_angle + 90.0) / 3.0;
+
 
 // Plunger insertion animation
 plunger_z = 
@@ -64,6 +71,8 @@ if (part == "all") {
     directional_layout() ring_body();
 } else if (part == "wiper") {
     directional_layout() wiper_arm();
+} else if (part == "trigger") {
+    directional_layout() trigger_lever();
 } else if (part == "blade") {
     directional_layout() wiper_blade();
 }
@@ -72,8 +81,7 @@ module assembly() {
     // 1. Ring Body (Rigid)
     ring_body();
     
-    // 2. Wiper Arm & Blade (Animated rotation Z at pivot_x, pivot_y)
-    // Wiper arm sits at z = -8.0 -> -4.0 (inside clevis joint)
+    // 2. Wiper Arm & Blade (Pivot A)
     translate([pivot_x, pivot_y, -8.0]) {
         rotate([0, 0, wiper_angle]) {
             color("green") wiper_arm();
@@ -81,30 +89,42 @@ module assembly() {
         }
     }
     
-    // 3. M3 Metal Pivot Screw (Rigid)
+    // 3. Trigger Lever (Pivot B)
+    translate([trigger_pivot_x, trigger_pivot_y, -8.0]) {
+        rotate([0, 0, trigger_angle]) {
+            color("green") trigger_lever();
+        }
+    }
+    
+    // 4. M3 Metal Pivot Screws (Pivot A & B)
     translate([pivot_x, pivot_y, -12.0])
         mock_m3_screw(len = 12.0);
+    translate([trigger_pivot_x, trigger_pivot_y, -12.0])
+        mock_m3_screw(len = 12.0);
             
-    // 4. Mock Plunger (Animated)
+    // 5. Mock Plunger (Animated)
     if (animate || t_val > 0) {
         translate([0, 0, plunger_z])
             mock_plunger();
-            
-        // Mock Spring (Animated compression)
-        lever_peg_x = pivot_x + 15 * cos(wiper_angle + 180);
-        lever_peg_y = pivot_y + 15 * sin(wiper_angle + 180);
-        
-        dx = lever_peg_x - ring_post_x;
-        dy = lever_peg_y - ring_post_y;
-        dist = sqrt(dx*dx + dy*dy);
-        angle = atan2(dy, dx);
-        
-        color("silver")
-            translate([ring_post_x, ring_post_y, -6.0])
-                rotate([0, 0, angle])
-                    rotate([0, 90, 0])
-                        cylinder(d = 9.0, h = dist, $fn=20);
     }
+    
+    // 6. Mock Spring (Animated compression between pegs)
+    trigger_peg_x = trigger_pivot_x - 5.0 * cos(trigger_angle) + 35.0 * sin(trigger_angle);
+    trigger_peg_y = trigger_pivot_y - 5.0 * sin(trigger_angle) - 35.0 * cos(trigger_angle);
+    
+    stationary_peg_x = stationary_handle_x + 10.0;
+    stationary_peg_y = stationary_handle_y;
+    
+    dx = trigger_peg_x - stationary_peg_x;
+    dy = trigger_peg_y - stationary_peg_y;
+    dist = sqrt(dx*dx + dy*dy);
+    angle = atan2(dy, dx);
+    
+    color("silver")
+        translate([stationary_peg_x, stationary_peg_y, -2.4])
+            rotate([0, 0, angle])
+                rotate([0, 90, 0])
+                    cylinder(d = 8.0, h = dist, $fn=20);
 }
 
 module ring_body() {
@@ -118,7 +138,6 @@ module ring_body() {
                     cylinder(d = plunger_di + 2 * wall_thickness, h = 35.0, $fn = 100);
                 
                 // Horizontal Slot in ring wall for arm/blade to sweep (Z span: z = -8.0 -> +2.0, height 10.0mm)
-                // Overlaps the center to avoid CSG singularities, and cuts only the wall.
                 translate([0, 0, -8.0]) {
                     intersection() {
                         difference() {
@@ -143,59 +162,44 @@ module ring_body() {
                 }
             }
             
-            // 2. Knuckles (Double shear clevis joint) - protected from slot cut
-            translate([pivot_x, pivot_y, -12.0])
-                cylinder(d = 12.0, h = 4.0, $fn = 50);
-            translate([pivot_x, pivot_y, -4.0])
-                cylinder(d = 12.0, h = 4.0, $fn = 50);
+            // 2. Dual-Pivot Gearbox Casing (Upper Deck: z = 0 -> 20, Lower Deck: z = -12 -> -8)
+            // Upper Deck casing (z = 0 -> 20)
+            translate([-71.0, -7.0, 0.0])
+                cube([42.4, 14.0, 20.0]);
                 
-            // 3. Bracket for stationary Spring Post (above arm sweep, z = 0 -> 4) - protected
-            translate([0, 0, 0.0]) {
-                hull() {
-                    translate([pivot_x, pivot_y, 0]) cylinder(d = 12.0, h = 4.0, $fn = 50);
-                    translate([ring_post_x, ring_post_y, 0]) cylinder(d = 12.0, h = 4.0, $fn = 50);
-                }
+            // Lower Deck casing (z = -12 -> -8)
+            translate([-71.0, -7.0, -12.0])
+                cube([42.4, 14.0, 4.0]);
+                
+            // 3. Stationary Handle Post (Ice Cream Scoop grip, z = -60 -> 20)
+            translate([stationary_handle_x, stationary_handle_y, -60.0])
+                cylinder(d = 14.0, h = 80.0, $fn = 50);
+                
+            // 4. Handle Support Bridge (bridges casing at [-71,0] to Handle at [-105,-15], z = 0 -> 20)
+            hull() {
+                translate([trigger_pivot_x, trigger_pivot_y, 0.0])
+                    cylinder(d = 14.0, h = 20.0, $fn = 50);
+                translate([stationary_handle_x, stationary_handle_y, 0.0])
+                    cylinder(d = 14.0, h = 20.0, $fn = 50);
             }
             
-            // 4. Stationary Spring Post extending down (z = -8 -> 0) - protected
-            translate([ring_post_x, ring_post_y, -8.0]) {
-                cylinder(d = 12.0, h = 8.0, $fn = 50);
-                // Vertical spring peg pointing up (z = -8 -> -2)
-                translate([0, 0, 2.0])
-                    cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
-            }
-            
-            // 5. Large Ergonomic Grip Loop - protected (support-free, left-side pivot match)
-            // Height 28mm, centered at z=11.0 (spans z = -3.0 -> +25.0, completely clears the wiper arm at z <= -4.2)
-            translate([0, 0, 11.0]) {
-                difference() {
-                    // Solid Wing Frame (slightly smaller footprint for neatness)
-                    hull() {
-                        translate([-22.0, -22.0, 0])
-                            cylinder(d = 28.0, h = 28.0, center = true, $fn = 50);
-                        translate([-56.0, -40.0, 0])
-                            cylinder(d = 20.0, h = 28.0, center = true, $fn = 50);
-                    }
-                    // Horizontal Finger Grip Hole (D=18mm, pointing along 150 degrees, perpendicular to 240 deg handle axis)
-                    rotate([0, 90, -30]) 
-                        cylinder(d = 18.0, h = 50.0, center = true, $fn = 50);
-                }
-            }
-
-            // 6. Upper Knuckle Support Bracket (spans z = 0 -> 20, bridges upper knuckle to upper ring wall)
-            translate([0, 0, 0.0]) {
+            // 5. Stationary Spring Peg Bracket (global z = -8 -> -4.4, thickness 3.6mm, holds spring peg)
+            translate([0, 0, -8.0]) {
                 hull() {
-                    translate([pivot_x, pivot_y, 0])
-                        cylinder(d = 12.0, h = 20.0, $fn = 50);
-                    translate([-(plunger_di/2 + wall_thickness - 1.0), 0, 0])
-                        cylinder(d = 8.0, h = 20.0, $fn = 50);
+                    translate([stationary_handle_x, stationary_handle_y, 0.0])
+                        cylinder(d = 12.0, h = 3.6, $fn = 50);
+                    translate([stationary_handle_x + 10.0, stationary_handle_y, 0.0])
+                        cylinder(d = 8.0, h = 3.6, $fn = 50);
                 }
             }
+            // Vertical spring peg pointing up (starts at top of bracket z = -4.4, height 6.0)
+            translate([stationary_handle_x + 10.0, stationary_handle_y, -4.4])
+                cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
         }
 
         // SUBTRACT internal bores and holes from the entire assembly
         union() {
-            // Upper Chamber (plunger bore, fits plunger seal, ID 57.5, z = 0 -> 15)
+            // Upper Chamber (plunger bore, ID 57.5, z = 0 -> 15)
             translate([0, 0, -0.1])
                 cylinder(d = plunger_di + 0.3, h = 15.1, $fn = 100);
                 
@@ -204,7 +208,6 @@ module ring_body() {
                 cylinder(d = plunger_di + 0.3, h = 15.2, $fn = 100);
                 
             // Stop Ledge (internal flange, ID 53.0, z = 15 -> 18)
-            // Modeled as a single rotate_extrude to prevent coincident face rendering artifacts
             rotate_extrude($fn = 100) {
                 polygon([
                     [0, 14.9],
@@ -216,43 +219,42 @@ module ring_body() {
                 ]);
             }
                 
-            // M3 Screw Pivot holes:
-            // 1. Tap Hole in upper knuckle (z = -4.1 -> 0.1)
+            // M3 Screw Pivot holes (Pivot A):
             translate([pivot_x, pivot_y, -4.1])
                 cylinder(d = screw_tap_d, h = 4.2, $fn = 30);
-                
-            // 2. Clearance Hole in lower knuckle (z = -12.1 -> -7.9)
             translate([pivot_x, pivot_y, -12.1])
                 cylinder(d = screw_clearance_d, h = 4.2, $fn = 30);
-                
-            // 3. Head Recess at bottom of lower knuckle (z = -12.1 -> -9.5)
             translate([pivot_x, pivot_y, -12.1])
+                cylinder(d = screw_head_d, h = screw_head_h + 0.1, $fn = 30);
+                
+            // M3 Screw Pivot holes (Pivot B - Trigger):
+            translate([trigger_pivot_x, trigger_pivot_y, -4.1])
+                cylinder(d = screw_tap_d, h = 4.2, $fn = 30);
+            translate([trigger_pivot_x, trigger_pivot_y, -12.1])
+                cylinder(d = screw_clearance_d, h = 4.2, $fn = 30);
+            translate([trigger_pivot_x, trigger_pivot_y, -12.1])
                 cylinder(d = screw_head_d, h = screw_head_h + 0.1, $fn = 30);
         }
     }
 }
 
 module wiper_arm() {
-    // Rigid wiper lever arm (printed flat)
-    // Local origin [0,0,0] is the pivot point.
-    // Extended back to 65mm total length to completely cross the plunger face.
+    // Geared wiper arm (local origin [0,0,0] is Pivot A)
+    // Squeegee arm points along +X, gear sector faces along -X (180 degrees)
     difference() {
         union() {
             // Knuckle (middle pivot block: z = 0.2 -> 3.8)
-            translate([0, 0, 0.2])
-                cylinder(d = 11.6, h = 3.6, $fn = 50);
+            translate([0, 0, 2.0])
+                cylinder(d = 11.6, h = 3.6, center = true, $fn = 50);
                 
             // Wiper Arm pointing along +X locally (length 65.0mm)
             translate([0, -2.5, 0.2])
                 cube([65.0, 5.0, 3.6]);
                 
-            // Lever Extension pointing along -X locally (length 20.0mm)
-            translate([-20.0, -4.0, 0.2])
-                cube([20.0, 8.0, 3.6]);
-                
-            // Lever Spring Peg (vertical peg pointing up, Z = 0.2 -> 6.2)
-            translate([-15.0, 0.0, 0.2])
-                cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
+            // 9.0mm Pinion Gear Sector pointing along -X (180 degrees)
+            // Teeth at local 120, 180, 240 degrees (pitch spacing 60 degrees)
+            translate([0, 0, 2.0]) rotate([0, 0, 180])
+                gear_sector(pitch_r = 9.0, num_teeth = 3, tooth_angle_span = 60.0, thickness = 3.6);
         }
 
         // Pin Hole (Clearance fit for M3 screw)
@@ -260,10 +262,41 @@ module wiper_arm() {
             cylinder(d = screw_clearance_d, h = 6, $fn = 30);
             
         // Wiper Blade slot (width 1.5mm, depth 2.2mm, z = 1.8 -> 4.0)
-        // Shifted to start at local x = 8.0 to completely clear the 12mm pivot knuckle.
-        // Length is 57.0mm (reaches x = 65.0 at the tip).
         translate([8.0, -0.75, 1.8])
             cube([57.0, 1.5, 2.2]);
+    }
+}
+
+module trigger_lever() {
+    // Geared moving trigger lever (local origin [0,0,0] is Pivot B)
+    // Gear sector faces along +X (0 degrees), lever post extends along -Y (-90 degrees)
+    difference() {
+        union() {
+            // Knuckle (middle pivot block: z = 0.2 -> 3.8)
+            translate([0, 0, 2.0])
+                cylinder(d = 14.0, h = 3.6, center = true, $fn = 50);
+                
+            // 27.0mm Gear Sector pointing along +X (0 degrees)
+            // Teeth at local -40, -20, 0, 20, 40 degrees (pitch spacing 20 degrees)
+            translate([0, 0, 2.0]) rotate([0, 0, 0])
+                gear_sector(pitch_r = 27.0, num_teeth = 5, tooth_angle_span = 20.0, thickness = 3.6);
+                
+            // Squeeze Handle Lever extending down (length 60.0mm, z = 0.2 -> 3.8)
+            translate([-5.0, -60.0, 0.2])
+                cube([10.0, 60.0, 3.6]);
+                
+            // Trigger Finger Guard / Contoured Grip Tab at the bottom
+            translate([-10.0, -60.0, 0.2])
+                cube([20.0, 10.0, 3.6]);
+                
+            // Vertical Spring Peg pointing along +Z (from top surface z = 3.8)
+            translate([-5.0, -35.0, 3.8])
+                cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
+        }
+
+        // Pin Hole (Clearance fit for M3 screw)
+        translate([0, 0, -1])
+            cylinder(d = screw_clearance_d, h = 6, $fn = 30);
     }
 }
 
@@ -313,3 +346,31 @@ module mock_plunger() {
         }
     }
 }
+
+// --- GEAR HELPER MODULES ---
+module gear_tooth(pitch_r, thickness) {
+    // Generates a single robust trapezoidal tooth along +X
+    // Extruded height matches the knuckle slots
+    linear_extrude(height = thickness, center = true)
+        polygon([
+            [pitch_r - 1.5, 2.0],
+            [pitch_r + 1.5, 1.0],
+            [pitch_r + 1.5, -1.0],
+            [pitch_r - 1.5, -2.0]
+        ]);
+}
+
+module gear_sector(pitch_r, num_teeth, tooth_angle_span, thickness) {
+    // Generates a sector of gear teeth centered at the origin
+    union() {
+        // Base backing sector cylinder
+        cylinder(r = pitch_r - 1.0, h = thickness, center = true, $fn = 50);
+        // Spaced teeth
+        for (i = [0 : num_teeth-1]) {
+            angle = (i - (num_teeth-1)/2) * tooth_angle_span;
+            rotate([0, 0, angle])
+                gear_tooth(pitch_r, thickness);
+        }
+    }
+}
+
