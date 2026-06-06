@@ -2,7 +2,7 @@
 // Simplified 2-Part Mechanical System with Shroud and Wide Slot:
 // 1. Ring Body (Rigid): 35mm tall collar with 330-degree slot and internal stop ledge.
 // 2. Wiper Arm (Rigid): Long pivoted lever (65mm) that completely crosses the plunger.
-// 3. Wiper Blade (Flexible): 60mm TPU blade pointing upwards.
+// 3. Wiper Blade (Flexible): 57mm TPU blade pointing upwards, starts 8mm from pivot.
 // 4. Pivot Pin (Rigid): Secures wiper arm to ring.
 
 // --- PART SELECTOR ---
@@ -101,18 +101,47 @@ module assembly() {
 
 module ring_body() {
     difference() {
+        // UNION of all positive geometry
         union() {
-            // Main ring cylinder (height 35mm, from z = -15 to +20)
-            translate([0, 0, -15.0])
-                cylinder(d = plunger_di + 2 * wall_thickness, h = 35.0, $fn = 100);
+            // 1. Ring Wall (with Slot cut out of it)
+            difference() {
+                // Main ring cylinder (height 35mm, from z = -15 to +20)
+                translate([0, 0, -15.0])
+                    cylinder(d = plunger_di + 2 * wall_thickness, h = 35.0, $fn = 100);
+                
+                // Horizontal Slot in ring wall for arm/blade to sweep (Z span: z = -8.0 -> +2.0, height 10.0mm)
+                // Overlaps the center to avoid CSG singularities, and cuts only the wall.
+                translate([0, 0, -8.0]) {
+                    intersection() {
+                        difference() {
+                            cylinder(d = plunger_di + 2*wall_thickness + 5.0, h = 10.0, $fn=100);
+                            cylinder(d = plunger_di - 2.0, h = 12.0, center=true, $fn=100);
+                        }
+                        linear_extrude(height = 10.0) {
+                            polygon([
+                                [-10.0, -10.0],
+                                [75*cos(-225), 75*sin(-225)],
+                                [75*cos(-180), 75*sin(-180)],
+                                [75*cos(-135), 75*sin(-135)],
+                                [75*cos(-90), 75*sin(-90)],
+                                [75*cos(-45), 75*sin(-45)],
+                                [75*cos(0), 75*sin(0)],
+                                [75*cos(45), 75*sin(45)],
+                                [75*cos(105), 75*sin(105)],
+                                [-10.0, 10.0]
+                            ]);
+                        }
+                    }
+                }
+            }
             
-            // Knuckles (Double shear clevis joint)
+            // 2. Knuckles (Double shear clevis joint) - protected from slot cut
             translate([pivot_x, pivot_y, -12.0])
                 cylinder(d = 12.0, h = 4.0, $fn = 50);
             translate([pivot_x, pivot_y, -4.0])
                 cylinder(d = 12.0, h = 4.0, $fn = 50);
                 
-            // Bracket for stationary Spring Post (above arm sweep, z = 0 -> 4)
+            // 3. Bracket for stationary Spring Post (above arm sweep, z = 0 -> 4) - protected
             translate([0, 0, 0.0]) {
                 hull() {
                     translate([pivot_x, pivot_y, 0]) cylinder(d = 12.0, h = 4.0, $fn = 50);
@@ -120,7 +149,7 @@ module ring_body() {
                 }
             }
             
-            // Stationary Spring Post extending down (z = -8 -> 0)
+            // 4. Stationary Spring Post extending down (z = -8 -> 0) - protected
             translate([ring_post_x, ring_post_y, -8.0]) {
                 cylinder(d = 12.0, h = 8.0, $fn = 50);
                 // Vertical spring peg pointing up (z = -8 -> -2)
@@ -128,12 +157,12 @@ module ring_body() {
                     cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
             }
             
-            // Grip Tab
+            // 5. Grip Tab - protected
             translate([plunger_di/2 + wall_thickness - 2.0, -10.0, -10.0])
                 cube([8.0, 20.0, 20.0]);
         }
 
-        // Cutouts
+        // SUBTRACT internal bores and holes from the entire assembly
         union() {
             // Upper Chamber (plunger bore, fits plunger seal, ID 57.5, z = 0 -> 15)
             translate([0, 0, -0.1])
@@ -159,32 +188,6 @@ module ring_body() {
             // Hinge Pin Bore (Z span: z = -13 -> 1)
             translate([pivot_x, pivot_y, -13.0])
                 cylinder(d = pivot_d + clearance * 2, h = 14.0, $fn = 50);
-                
-            // Horizontal Slot in ring wall for arm to sweep (Z span: z = -8 -> -4)
-            // Sector: -225 to +105 degrees around origin (330-degree continuous cut)
-            // Polygon vertices offset from [0,0] to prevent rendering spikes/singularities in OpenSCAD
-            translate([0, 0, -8.0]) {
-                intersection() {
-                    difference() {
-                        cylinder(d = plunger_di + 2*wall_thickness + 5.0, h = 4.0, $fn=100);
-                        cylinder(d = plunger_di - 2.0, h = 6.0, center=true, $fn=100);
-                    }
-                    linear_extrude(height = 4.0) {
-                        polygon([
-                            [-10.0, -10.0],
-                            [75*cos(-225), 75*sin(-225)],
-                            [75*cos(-180), 75*sin(-180)],
-                            [75*cos(-135), 75*sin(-135)],
-                            [75*cos(-90), 75*sin(-90)],
-                            [75*cos(-45), 75*sin(-45)],
-                            [75*cos(0), 75*sin(0)],
-                            [75*cos(45), 75*sin(45)],
-                            [75*cos(105), 75*sin(105)],
-                            [-10.0, 10.0]
-                        ]);
-                    }
-                }
-            }
         }
     }
 }
@@ -217,23 +220,25 @@ module wiper_arm() {
             cylinder(d = pivot_d + clearance * 2, h = 6, $fn = 50);
             
         // Wiper Blade slot (width 1.5mm, depth 2.2mm, z = 1.8 -> 4.0)
-        // Starts at x = 5.0, length is 60.0mm (reaches x = 65.0 at the tip)
-        translate([5.0, -0.75, 1.8])
-            cube([60.0, 1.5, 2.2]);
+        // Shifted to start at local x = 8.0 to completely clear the 12mm pivot knuckle.
+        // Length is 57.0mm (reaches x = 65.0 at the tip).
+        translate([8.0, -0.75, 1.8])
+            cube([57.0, 1.5, 2.2]);
     }
 }
 
 module wiper_blade() {
     // Flexible TPU squeegee blade
     // Fits into the wiper arm slot and extends upwards to scrape the plunger face.
-    // Total length is 60.0mm.
+    // Shifted to start at local x = 8.0 to clear pivot knuckle.
+    // Total length is 57.0mm.
     // Total height is 8.0mm (2.2mm in slot, 5.8mm sticking out).
-    translate([5.0, -0.75, 1.8]) {
+    translate([8.0, -0.75, 1.8]) {
         // Base slot block
-        cube([60.0, 1.5, 2.2]);
+        cube([57.0, 1.5, 2.2]);
         // Squeegee flap (5.8mm sticks out, total height 8.0mm)
         translate([0, 0, 2.2])
-            cube([60.0, 1.0, 5.8]);
+            cube([57.0, 1.0, 5.8]);
     }
 }
 
