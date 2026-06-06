@@ -1,47 +1,65 @@
-# Aeropress Plunger Wiper Ring (ADCR) - Mechanical Spring-Loaded Version
+# Aeropress Cleaners (ADCR & AMFC)
 
-A compact, 3D-printable, support-free, mechanical tool to clean your Aeropress plunger face directly over your office trash can using a spring-returned pivoted squeegee wiper.
+This repository contains two 3D-printable, office-desk-friendly cleaning tools for the **AeroPress** coffee maker, designed to clean coffee grounds directly over a trash can:
+1.  **Plunger Wiper Ring (ADCR)**: Sweeps coffee grounds off the rubber plunger seal face using a spring-returned pivoted squeegee.
+2.  **Metal Filter Cleaner (AMFC)**: Wipes grounds off both sides of a circular metal mesh filter using a clamped double-sided squeegee envelope.
+
+Both tools are designed to print completely **support-free** and assemble using standard Prusa-style **M3 metal screws** and a **harvested Mounjaro pen spring**.
+
+---
+
+## 1. Plunger Wiper Ring (ADCR)
 
 ![Plunger Scraping Action](Animation/plunger_scrape_v2.gif)
 
-## How It Works
-*   **Seating the Plunger**: Slide the Plunger Wiper Ring over the end of the Aeropress plunger until the top edge of the plunger seal hits the internal stop ledge.
-*   **Mechanical Sweep**: Push the external thumb lever. This compresses the internal spring and sweeps the flexible wiper blade across the entire plunger face, scraping the coffee grounds clean.
-*   **Spring Return**: Release the lever. A harvested **Mounjaro pen spring** pushes the wiper arm back to its parked position, clear of the plunger.
-*   **Clean Collection**: Scraped grounds fall straight out of the open bottom of the ring into the trash can. Pull the clean plunger out of the ring.
+### How It Works:
+*   Slide the ring collar over the Aeropress plunger seal until it sits flush against the internal stop ledge.
+*   Push the thumb lever to compress the spring and sweep the flexible blade across the plunger face.
+*   Release the lever. The vertical Mounjaro pen spring pops the arm back to the park position.
+*   Coffee grounds fall out the open bottom of the ring.
+
+### Bill of Materials & Print Guide:
+*   **M3x12mm Screw** (x1): Functions as the metal hinge pivot shaft. Threads directly into the top knuckle plastic.
+*   **Mounjaro Pen Spring** (x1): Harvested from a spent injection pen (approx. 8mm OD, 40mm length).
+*   **ring.stl** (Rigid): Print **upside-down (top rim on bed)**, no supports.
+*   **wiper.stl** (Rigid): Print flat on bed.
+*   **blade.stl** (Flexible TPU): Print flat on bed.
 
 ---
 
-## 3D Printing & Materials Guide
+## 2. Metal Filter Cleaner (AMFC)
 
-All 3D parts print completely **without supports**.
+![Filter Cleaning Action](Animation/filter_clean_anim.gif)
 
-| Part | Material | Print Orientation | Qty | Notes |
-| :--- | :--- | :--- | :---: | :--- |
-| **Ring Body** | PETG / PLA | Upside-down (Top rim on bed) | 1 | Includes internal stop ledge and outer knuckles. Support-free when flipped! |
-| **Wiper Arm** | PETG / PLA | Flat on bed | 1 | Heavy layer density for hinge strength. |
-| **Wiper Blade** | Flexible TPU / PLA | Flat on bed | 1 | Snaps into the slot on the wiper arm. |
-| **Pivot Pin** | PETG / PLA | Flat on bed | 1 | Printed horizontally for shear strength. |
-| **Mounjaro Spring** | Stainless Steel | N/A | 1 | Harvested from a spent Mounjaro injection pen. |
+### How It Works:
+*   Hold the filter cleaner vertically over a trash can.
+*   Push your circular metal mesh filter ($62\text{mm}$) down into the top chamfered funnel guide.
+*   Slide the filter all the way through the channel. Dual TPU squeegee blades scrape both faces of the filter at the same time.
+*   Cleaned filter slides out the bottom, while grounds fall straight down into the trash.
 
-### Settings:
-*   **Rigid parts (Ring, Arm, Pin)**: 0.2mm layer height, 3 walls, 20% infill.
-*   **Flexible parts (Blade)**: 0.2mm layer height, 2 walls, 15% infill.
-
----
-
-## Assembly
-1.  Slide the flexible **Wiper Blade** into the slot on the **Wiper Arm** until it is centered.
-2.  Harvest a spring from a spent **Mounjaro injection pen** (approx. 10mm OD, 40mm length).
-3.  Insert the spring into the horizontal spring pocket on the side of the **Ring Body**.
-4.  Fit the **Wiper Arm** knuckle between the ring knuckles, ensuring the lever's retainer peg fits inside the spring.
-5.  Push the **Pivot Pin** up through the bottom of the knuckles to lock it all together.
+### Bill of Materials & Print Guide:
+*   **M3x12mm Screws** (x4): Securely clamp the front and back halves together.
+*   **filter_front.stl** (Rigid): Contains M3 clearance screw holes. Print flat, mating face on bed.
+*   **filter_back.stl** (Rigid): Contains M3 tap holes. Print flat, mating face on bed.
+*   **filter_blade.stl** (Flexible TPU, x2): Print flat. Simple rectangular squeegee sheets ($55\text{mm} \times 15\text{mm} \times 1.5\text{mm}$).
 
 ---
 
-## OpenSCAD Customization
-The model is fully parametric in `aeropress_cleaner.scad`:
-*   `plunger_di` (default `57.2` mm) — AeroPress plunger diameter.
-*   `plunger_dome_h` (default `3.5` mm) — Plunger dome face depth.
-*   `spring_od` (default `10.0` mm) — Diameter of the spring.
-*   `spring_len` (default `40.0` mm) — Length of the spring.
+## Assembly Instructions
+
+### Plunger Ring:
+1.  Insert the flexible **blade** into the slot on the **wiper** arm (starts 8mm from pivot).
+2.  Press-fit the Mounjaro pen spring onto the stationary **Ring Post peg** and the moving **Lever Post peg**.
+3.  Align the wiper knuckle with the ring knuckles and insert your **M3x12mm screw** from the bottom. Tighten until the head is flush inside the bottom recess.
+
+### Filter Cleaner:
+1.  Place the two flat TPU **filter_blade** sheets into the recesses of the **filter_front** and **filter_back** halves.
+2.  Press the front and back halves together (alignment tracks will match).
+3.  Insert **four M3x12mm screws** from the front clearance side and screw them securely into the back tap holes to clamp the blades flat.
+
+---
+
+## Customization in OpenSCAD
+Each project has its own parametric model:
+*   `aeropress_cleaner.scad`: Customizable plunger diameters (`plunger_di`), wall thickness, and M3 clearance fits.
+*   `filter_cleaner.scad`: Customizable filter diameters (`filter_di`), filter thickness, and blade clearances.

@@ -45,79 +45,101 @@ if ($RenderGif -and !(Test-Path $gifDir)) { New-Item -ItemType Directory -Path $
 Write-Host "--- Starting Render Loop ---" -ForegroundColor Cyan
 Write-Host "Using OpenSCAD at: $osPath"
 
-# Double-quote character for arguments
 $dq = [char]34
 
-# 3. RENDER STL PARTS
-$parts = @(
-    "ring",
-    "wiper",
-    "blade"
+# 3. DEFINE PROJECTS AND PARTS
+$projects = @(
+    @{
+        ScadFile = "aeropress_cleaner.scad"
+        Parts = @(
+            @{ Name = "ring"; StlName = "ring" },
+            @{ Name = "wiper"; StlName = "wiper" },
+            @{ Name = "blade"; StlName = "blade" }
+        )
+        PngName = "preview_v2"
+        PngCamera = "0,0,30,55,0,45,300"
+        GifName = "plunger_scrape_v2"
+        GifPitch = 55
+        GifCamDist = 280
+    },
+    @{
+        ScadFile = "filter_cleaner.scad"
+        Parts = @(
+            @{ Name = "front"; StlName = "filter_front" },
+            @{ Name = "back"; StlName = "filter_back" },
+            @{ Name = "blade"; StlName = "filter_blade" }
+        )
+        PngName = "filter_preview"
+        PngCamera = "0,0,0,55,0,45,280"
+        GifName = "filter_clean_anim"
+        GifPitch = 55
+        GifCamDist = 280
+    }
 )
 
-foreach ($pName in $parts) {
-    $stlFile = "$stlDir/$pName.stl"
-    Write-Host "Rendering $pName -> $stlFile" -ForegroundColor Yellow
+# 4. RENDER LOOP
+foreach ($proj in $projects) {
+    Write-Host "Processing Project: $($proj.ScadFile)" -ForegroundColor Green
     
-    if (Test-Path $stlFile) { Remove-Item $stlFile }
-    
-    $partArg = "part=${dq}$pName${dq}"
-    $stlArgs = @(
-        "-o", $stlFile,
-        "-D", $partArg,
-        "aeropress_cleaner.scad"
-    )
-    
-    & $osPath $stlArgs
-
-    if ((Test-Path $stlFile) -and (Get-Item $stlFile).Length -gt 0) {
-        Write-Host "  [STL] Success" -ForegroundColor Green
-    } else {
-        Write-Host "  [STL] Failed" -ForegroundColor Red
+    # A. Render STL Parts
+    foreach ($part in $proj.Parts) {
+        $stlFile = "$stlDir/$($part.StlName).stl"
+        Write-Host "  Rendering part $($part.Name) -> $stlFile" -ForegroundColor Yellow
+        
+        if (Test-Path $stlFile) { Remove-Item $stlFile }
+        
+        $partArg = "part=${dq}$($part.Name)${dq}"
+        $stlArgs = @(
+            "-o", $stlFile,
+            "-D", $partArg,
+            $proj.ScadFile
+        )
+        
+        & $osPath $stlArgs | Out-Null
+        
+        if ((Test-Path $stlFile) -and (Get-Item $stlFile).Length -gt 0) {
+            Write-Host "    [STL] Success" -ForegroundColor Green
+        } else {
+            Write-Host "    [STL] Failed" -ForegroundColor Red
+        }
     }
-}
-
-# 4. RENDER PNG PREVIEW
-if ($RenderPng) {
-    $pngFile = "$pngDir/preview_v2.png"
-    Write-Host "Rendering Preview PNG -> $pngFile" -ForegroundColor Yellow
     
-    if (Test-Path $pngFile) { Remove-Item $pngFile }
-    
-    $partArg = "part=${dq}all${dq}"
-    $pngArgs = @(
-        "-o", $pngFile,
-        "-D", $partArg,
-        "--imgsize", "1280,720",
-        "--camera", "0,0,30,55,0,45,300",
-        "--colorscheme", "DeepOcean",
-        "aeropress_cleaner.scad"
-    )
-    
-    & $osPath $pngArgs
-
-    if (Test-Path $pngFile) {
-        Write-Host "  [PNG] Success" -ForegroundColor Green
-    } else {
-        Write-Host "  [PNG] Failed" -ForegroundColor Red
+    # B. Render PNG Preview
+    if ($RenderPng) {
+        $pngFile = "$pngDir/$($proj.PngName).png"
+        Write-Host "  Rendering Preview PNG -> $pngFile" -ForegroundColor Yellow
+        
+        if (Test-Path $pngFile) { Remove-Item $pngFile }
+        
+        $partArg = "part=${dq}all${dq}"
+        $pngArgs = @(
+            "-o", $pngFile,
+            "-D", $partArg,
+            "--imgsize", "1280,720",
+            "--camera", $proj.PngCamera,
+            "--colorscheme", "DeepOcean",
+            $proj.ScadFile
+        )
+        
+        & $osPath $pngArgs | Out-Null
+        
+        if (Test-Path $pngFile) {
+            Write-Host "    [PNG] Success" -ForegroundColor Green
+        } else {
+            Write-Host "    [PNG] Failed" -ForegroundColor Red
+        }
     }
-}
-
-# 5. RENDER GIF ANIMATIONS (Plunger Scrape & Filter Scrape)
-if ($RenderGif) {
-    $animations = @(
-        @{ Name = "plunger_scrape_v2"; Mode = 1; CamDist = 280; Pitch = 55 }
-    )
-
-    foreach ($anim in $animations) {
-        $gifFile = "$gifDir/$($anim.Name).gif"
-        Write-Host "Rendering Animation GIF (mode=$($anim.Mode)) -> $gifFile" -ForegroundColor Yellow
+    
+    # C. Render GIF Animation
+    if ($RenderGif) {
+        $gifFile = "$gifDir/$($proj.GifName).gif"
+        Write-Host "  Rendering Animation GIF -> $gifFile" -ForegroundColor Yellow
         
         if (Test-Path $tempFrameDir) { Remove-Item -Recurse -Force $tempFrameDir }
         New-Item -ItemType Directory -Path $tempFrameDir | Out-Null
         
         $frameCount = 40
-        Write-Host "  Rendering $frameCount frames..." -ForegroundColor Yellow
+        Write-Host "    Rendering $frameCount frames..." -ForegroundColor Yellow
         
         for ($i = 0; $i -lt $frameCount; $i++) {
             $t_val = $i / $frameCount
@@ -125,37 +147,36 @@ if ($RenderGif) {
             $pngFile = "$tempFrameDir/$frameName"
             
             $partArg = "part=${dq}all${dq}"
-            $modeArg = "anim_mode=$($anim.Mode)"
             $animateArg = "animate=true"
             $tArg = "time_t=$t_val"
             
-            # Spin the camera 90 degrees around Z axis over the animation course
+            # Slow 90-degree camera sweep
             $cam_rot_z = 45 + ($i / $frameCount) * 90
-            $cameraVal = "0,0,30,$($anim.Pitch),0,$cam_rot_z,$($anim.CamDist)"
+            $cameraVal = "0,0,0,$($proj.GifPitch),0,$cam_rot_z,$($proj.GifCamDist)"
+            if ($proj.ScadFile -eq "aeropress_cleaner.scad") {
+                # Center camera slightly higher for plunger
+                $cameraVal = "0,0,30,$($proj.GifPitch),0,$cam_rot_z,$($proj.GifCamDist)"
+            }
             
             $frameArgs = @(
                 "-o", $pngFile,
                 "-D", $partArg,
-                "-D", $modeArg,
                 "-D", $animateArg,
                 "-D", $tArg,
                 "--imgsize", "640,360",
                 "--camera", $cameraVal,
                 "--colorscheme", "DeepOcean",
-                "aeropress_cleaner.scad"
+                $proj.ScadFile
             )
             
-            # Render single frame
             & $osPath $frameArgs | Out-Null
         }
         
         if (Test-Path "$tempFrameDir/frame_0000.png") {
-            Write-Host "  Frames generated. Combining into GIF..." -ForegroundColor Yellow
+            Write-Host "    Combining frames into GIF..." -ForegroundColor Yellow
             
-            # Check if ffmpeg is available
             $ffmpegPath = Get-Command ffmpeg -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
             if ($ffmpegPath) {
-                # Combine using ffmpeg (generates a very clean optimized palette GIF)
                 $ffmpegArgs = @(
                     "-y",
                     "-framerate", "5",
@@ -165,7 +186,6 @@ if ($RenderGif) {
                 )
                 & $ffmpegPath $ffmpegArgs | Out-Null
             } else {
-                # Fallback to ImageMagick's convert
                 $convertPath = Get-Command convert -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
                 if ($convertPath) {
                     $convertArgs = @(
@@ -176,20 +196,19 @@ if ($RenderGif) {
                     )
                     & $convertPath $convertArgs | Out-Null
                 } else {
-                    Write-Host "  ERROR: Neither ffmpeg nor convert (ImageMagick) found. Cannot assemble GIF." -ForegroundColor Red
+                    Write-Host "    ERROR: Neither ffmpeg nor convert found." -ForegroundColor Red
                 }
             }
             
             if ((Test-Path $gifFile) -and (Get-Item $gifFile).Length -gt 0) {
-                Write-Host "  [GIF] Success: $gifFile" -ForegroundColor Green
+                Write-Host "    [GIF] Success: $gifFile" -ForegroundColor Green
             } else {
-                Write-Host "  [GIF] Failed assembling: $gifFile" -ForegroundColor Red
+                Write-Host "    [GIF] Failed assembling: $gifFile" -ForegroundColor Red
             }
         } else {
-            Write-Host "  [GIF] Failed to generate frames for $($anim.Name)" -ForegroundColor Red
+            Write-Host "    [GIF] Failed to generate frames" -ForegroundColor Red
         }
         
-        # Clean up temp frames
         if (Test-Path $tempFrameDir) { Remove-Item -Recurse -Force $tempFrameDir }
     }
 }
