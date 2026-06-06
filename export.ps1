@@ -130,8 +130,8 @@ if ($RenderGif) {
             $animateArg = "animate=true"
             $tArg = "time_t=$t_val"
             
-            # Spin the camera 360 degrees around Z axis over the animation course
-            $cam_rot_z = 45 + ($i / $frameCount) * 360
+            # Spin the camera 90 degrees around Z axis over the animation course
+            $cam_rot_z = 45 + ($i / $frameCount) * 90
             $cameraVal = "0,0,30,$($anim.Pitch),0,$cam_rot_z,$($anim.CamDist)"
             
             $frameArgs = @(
@@ -143,7 +143,6 @@ if ($RenderGif) {
                 "--imgsize", "640,360",
                 "--camera", $cameraVal,
                 "--colorscheme", "DeepOcean",
-                "--enable", "manifold",
                 "aeropress_cleaner.scad"
             )
             
@@ -160,7 +159,7 @@ if ($RenderGif) {
                 # Combine using ffmpeg (generates a very clean optimized palette GIF)
                 $ffmpegArgs = @(
                     "-y",
-                    "-framerate", "10",
+                    "-framerate", "5",
                     "-i", "$tempFrameDir/frame_%04d.png",
                     "-vf", "split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse",
                     $gifFile
@@ -171,7 +170,7 @@ if ($RenderGif) {
                 $convertPath = Get-Command convert -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
                 if ($convertPath) {
                     $convertArgs = @(
-                        "-delay", "10",
+                        "-delay", "20",
                         "-loop", "0",
                         "$tempFrameDir/frame_*.png",
                         $gifFile
