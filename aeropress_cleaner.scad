@@ -121,7 +121,7 @@ module assembly() {
     angle = atan2(dy, dx);
     
     color("red")
-        translate([stationary_peg_x, stationary_peg_y, -2.0])
+        translate([stationary_peg_x, stationary_peg_y, 0.0])
             rotate([0, 0, angle])
                 rotate([0, 90, 0])
                     cylinder(d = 8.0, h = dist, $fn=20);
@@ -137,14 +137,14 @@ module ring_body() {
                 translate([0, 0, -15.0])
                     cylinder(d = plunger_di + 2 * wall_thickness, h = 35.0, $fn = 100);
                 
-                // Horizontal Slot in ring wall for arm/blade to sweep (Z span: z = -8.0 -> +2.0, height 10.0mm)
-                translate([0, 0, -8.0]) {
+                // Horizontal Slot in ring wall for arm/blade to sweep (Z span: z = -5.0 -> +7.0, height 12.0mm)
+                translate([0, 0, -5.0]) {
                     intersection() {
                         difference() {
-                            cylinder(d = plunger_di + 2*wall_thickness + 5.0, h = 10.0, $fn=100);
-                            cylinder(d = plunger_di - 2.0, h = 12.0, center=true, $fn=100);
+                            cylinder(d = plunger_di + 2*wall_thickness + 5.0, h = 12.0, $fn=100);
+                            cylinder(d = plunger_di - 2.0, h = 14.0, center=true, $fn=100);
                         }
-                        linear_extrude(height = 10.0) {
+                        linear_extrude(height = 12.0) {
                             polygon([
                                 [0.0, 0.0],
                                 [75.0 * cos(15.0), 75.0 * sin(15.0)],
