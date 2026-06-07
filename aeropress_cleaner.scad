@@ -38,17 +38,17 @@ time_t = undef;
 t_val = (time_t != undef) ? time_t : $t;
 
 // Wiper Angle Animation:
-// t = 0.0 -> 0.2: Wiper parks at -90 degrees (idle)
-// t = 0.2 -> 0.5: Wiper sweeps clockwise to -270 degrees (compressing spring)
-// t = 0.5 -> 0.8: Wiper returns counter-clockwise to -90 degrees
+// t = 0.0 -> 0.2: Wiper parks at +90 degrees (idle, top)
+// t = 0.2 -> 0.5: Wiper sweeps clockwise to -90 degrees (compressing spring)
+// t = 0.5 -> 0.8: Wiper returns counter-clockwise to +90 degrees
 wiper_angle = 
-    (t_val < 0.2) ? -90 :
-    (t_val < 0.5) ? -90 - ((t_val - 0.2) / 0.3) * 180 :
-    (t_val < 0.8) ? -270 + ((t_val - 0.5) / 0.3) * 180 :
-    -90;
+    (t_val < 0.2) ? 90 :
+    (t_val < 0.5) ? 90 - ((t_val - 0.2) / 0.3) * 180 :
+    (t_val < 0.8) ? -90 + ((t_val - 0.5) / 0.3) * 180 :
+    90;
 
 // Trigger Angle Animation: Squeezes counter-clockwise from -90 -> -45 linked to wiper (ratio 4:1)
-trigger_angle = -90.0 - (wiper_angle + 90.0) / 4.0;
+trigger_angle = -90.0 - (wiper_angle - 90.0) / 4.0;
 
 
 // Plunger insertion animation
