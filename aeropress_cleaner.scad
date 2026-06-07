@@ -297,20 +297,20 @@ module trigger_lever() {
             hull() {
                 translate([0, 0, 1.8])
                     cylinder(d = 14.0, h = 3.6, center = true, $fn = 50);
-                translate([-25.0, 0.0, 1.8])
+                translate([-12.0, 0.0, 1.8])
                     cylinder(d = 10.0, h = 3.6, center = true, $fn = 50);
             }
             
             // Gooseneck Riser (hulls from trigger arm top z=3.6 to top deck z=13.5)
             hull() {
-                translate([-25.0, 0.0, 3.6])
+                translate([-12.0, 0.0, 3.6])
                     cylinder(d = 10.0, h = 1.0, center = true, $fn = 50);
-                translate([-25.0, 0.0, 13.5])
+                translate([-12.0, 0.0, 13.5])
                     cylinder(d = 10.0, h = 1.0, center = true, $fn = 50);
             }
             
             // Thumb Tab horizontal plate (sitting at z = 13.5, thickness 3.6mm, 1.5mm clearance gap)
-            translate([-25.0, 0.0, 13.5]) {
+            translate([-12.0, 0.0, 13.5]) {
                 hull() {
                     cylinder(d = 10.0, h = 3.6, center = true, $fn = 50);
                     translate([-15.0, 0.0, 0.0])
