@@ -260,17 +260,6 @@ module ring_body() {
             translate([trigger_pivot_x, trigger_pivot_y, -8.1])
                 translate([-20.0, -8.0, 0.0])
                     cube([40.0, 16.0, 8.2]);
-                    
-            // 5. C-Collar Snap opening cutout (open -60 -> +60 degrees, i.e. 120 degrees open on the right)
-            // Allows the ring to snap-fit sideways onto the plunger instead of sliding down
-            linear_extrude(height = 42.0, center = true)
-                polygon([
-                    [0.0, 0.0],
-                    [80.0 * cos(-60), 80.0 * sin(-60)],
-                    [80.0, -80.0],
-                    [80.0, 80.0],
-                    [80.0 * cos(60), 80.0 * sin(60)]
-                ]);
         }
     }
 }
