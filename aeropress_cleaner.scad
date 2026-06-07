@@ -231,7 +231,7 @@ module ring_body() {
                     }
                     // Extend pocket left to clear the trigger tab base and spring
                     translate([-120.0, -15.0])
-                        cube([60.0, 30.0]);
+                        square([60.0, 30.0]);
                 }
             }
         }
