@@ -121,7 +121,7 @@ module assembly() {
     angle = atan2(dy, dx);
     
     color("red")
-        translate([stationary_peg_x, stationary_peg_y, 0.0])
+        translate([stationary_peg_x, stationary_peg_y, 1.0])
             rotate([0, 0, angle])
                 rotate([0, 90, 0])
                     cylinder(d = 7.0, h = dist, $fn=20);
@@ -158,35 +158,21 @@ module ring_body() {
                 }
             }
             
-            // 2. Dual-Pivot Integrated Bulbous Handle Casing (z = -12.0 -> 12.0)
-            // A. Compact Gearbox Casing enclosing Pivot A (D=16) and Pivot B (D=46)
+            // 2. Dual-Pivot Integrated Open Handle Plate (z = -12.0 -> -4.0, thickness 8.0mm)
+            // A simple straight flat bar running from Pivot A to the grip end.
             hull() {
-                translate([pivot_x, pivot_y, 0.0])
-                    cylinder(d = 16.0, h = 24.0, center = true, $fn = 50);
-                translate([trigger_pivot_x, trigger_pivot_y, 0.0])
-                    cylinder(d = 46.0, h = 24.0, center = true, $fn = 60);
+                translate([pivot_x, pivot_y, -8.0])
+                    cylinder(d = 20.0, h = 8.0, center = true, $fn = 50);
+                translate([trigger_pivot_x, trigger_pivot_y, -8.0])
+                    cylinder(d = 20.0, h = 8.0, center = true, $fn = 50);
+                translate([stationary_handle_x, 0.0, -8.0])
+                    cylinder(d = 20.0, h = 8.0, center = true, $fn = 50);
             }
             
-            // B. Tapered neck transition from Pivot B (D=46) to handle grip start (D=20 at X=-75)
-            hull() {
-                translate([trigger_pivot_x, trigger_pivot_y, 0.0])
-                    cylinder(d = 46.0, h = 24.0, center = true, $fn = 60);
-                translate([-75.0, 0.0, 0.0])
-                    cylinder(d = 20.0, h = 24.0, center = true, $fn = 50);
-            }
-            
-            // C. Narrow paddle handle grip (D=20 from X=-75 to X=-150)
-            hull() {
-                translate([-75.0, 0.0, 0.0])
-                    cylinder(d = 20.0, h = 24.0, center = true, $fn = 50);
-                translate([-150.0, 0.0, 0.0])
-                    cylinder(d = 20.0, h = 24.0, center = true, $fn = 50);
-            }
-            
-            // 3. Stationary Spring Post (starts at bottom plate floor z = -4.0, height 6.0)
-            // Placed at [-48.0, 8.0] inside the gear cavity slot
+            // 3. Stationary Spring Post (starts at bottom plate top surface z = -4.0, height 7.0)
+            // Points up. Placed at [-48.0, 8.0]
             translate([-48.0, 8.0, -4.0])
-                cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
+                cylinder(d = spring_peg_d, h = 7.0, $fn = 25);
         }
 
         // SUBTRACT internal bores and holes from the entire assembly
@@ -212,61 +198,20 @@ module ring_body() {
             }
                 
             // M3 Screw Pivot holes (Pivot A):
-            // Head recess at bottom:
+            // Head recess at bottom of handle plate:
             translate([pivot_x, pivot_y, -12.1])
                 cylinder(d = screw_head_d, h = screw_head_h + 0.1, $fn = 30);
-            // Clearance hole through bottom floor & knuckle:
-            translate([pivot_x, pivot_y, -12.1])
-                cylinder(d = screw_clearance_d, h = 16.2, $fn = 30);
-            // Tap hole in top plate (z = 4.0 -> 12.0):
-            translate([pivot_x, pivot_y, 4.0])
-                cylinder(d = screw_tap_d, h = 8.1, $fn = 30);
+            // Tap hole through the handle plate (threads directly into plastic):
+            translate([pivot_x, pivot_y, -9.6])
+                cylinder(d = screw_tap_d, h = 6.0, $fn = 30);
                 
             // M3 Screw Pivot holes (Pivot B - Trigger):
-            // Head recess at bottom:
+            // Head recess at bottom of handle plate:
             translate([trigger_pivot_x, trigger_pivot_y, -12.1])
                 cylinder(d = screw_head_d, h = screw_head_h + 0.1, $fn = 30);
-            // Clearance hole through bottom floor & knuckle:
-            translate([trigger_pivot_x, trigger_pivot_y, -12.1])
-                cylinder(d = screw_clearance_d, h = 16.2, $fn = 30);
-            // Tap hole in top plate (z = 4.0 -> 12.0):
-            translate([trigger_pivot_x, trigger_pivot_y, 4.0])
-                cylinder(d = screw_tap_d, h = 8.1, $fn = 30);
-                
-            // 4. Internal Gear Pocket Cavity Cutout (z = -4.1 -> 4.1, height 8.2)
-            // Houses both gear knuckles and the trigger lever swept path
-            translate([0, 0, -4.1]) {
-                linear_extrude(height = 8.2) {
-                    hull() {
-                        translate([pivot_x, pivot_y])
-                            circle(r = 10.0, $fn = 50);
-                        translate([trigger_pivot_x, trigger_pivot_y])
-                            circle(r = 22.0, $fn = 60);
-                    }
-                    // Extend pocket left to clear the trigger tab base and spring
-                    translate([-100.0, -12.0])
-                        square([50.0, 24.0]);
-                }
-            }
-            // 5. Trigger lever riser slot cutout in top plate (z = 4.0 -> 12.1)
-            // Arc of radius 12mm, width 10mm, spanning 85 -> 140 degrees from Pivot B [-60, 0]
-            translate([trigger_pivot_x, trigger_pivot_y, 3.9]) {
-                linear_extrude(height = 8.3) {
-                    intersection() {
-                        difference() {
-                            circle(r = 12.0 + 5.0, $fn = 60);
-                            circle(r = 12.0 - 5.0, $fn = 60);
-                        }
-                        polygon([
-                            [0.0, 0.0],
-                            [25.0 * cos(85.0), 25.0 * sin(85.0)],
-                            [0.0, 25.0],
-                            [-25.0, 25.0],
-                            [25.0 * cos(140.0), 25.0 * sin(140.0)]
-                        ]);
-                    }
-                }
-            }
+            // Tap hole through the handle plate (threads directly into plastic):
+            translate([trigger_pivot_x, trigger_pivot_y, -9.6])
+                cylinder(d = screw_tap_d, h = 6.0, $fn = 30);
         }
     }
 }
@@ -306,20 +251,11 @@ module trigger_lever() {
             // Knuckle (middle pivot block: z = -3.6 -> 3.6, height 7.2)
             cylinder(d = 14.0, h = 7.2, center = true, $fn = 50);
             
-            // Vertical Gooseneck Riser (hulls from knuckle at z=0 to top deck at z=12)
+            // Flat trigger arm and thumb tab (integrated, H = 7.2mm, z = -3.6 -> 3.6)
             hull() {
-                cylinder(d = 14.0, h = 1.0, center = true, $fn = 50);
-                translate([-15.0, 0.0, 13.5])
-                    cylinder(d = 10.0, h = 1.0, center = true, $fn = 50);
-            }
-            
-            // Thumb Tab horizontal plate (sitting at z = 13.5, thickness 3.6mm, 1.5mm clearance gap)
-            translate([-15.0, 0.0, 13.5]) {
-                hull() {
-                    cylinder(d = 10.0, h = 3.6, center = true, $fn = 50);
-                    translate([-15.0, 0.0, 0.0])
-                        cylinder(d = 10.0, h = 3.6, center = true, $fn = 50);
-                }
+                cylinder(d = 14.0, h = 7.2, center = true, $fn = 50);
+                translate([-25.0, 0.0, 0.0])
+                    cylinder(d = 10.0, h = 7.2, center = true, $fn = 50);
             }
                 
             // 20.0mm Gear Sector centered at Z=0 (thickness 3.6mm, z = -1.8 -> 1.8)
@@ -327,11 +263,10 @@ module trigger_lever() {
             rotate([0, 0, 67.5])
                 gear_sector(pitch_r = 20.0, num_teeth = 5, tooth_angle_span = 15.0, thickness = 3.6);
                 
-            // Vertical Spring Peg pointing down from knuckle center (z = 0.0 -> -3.0)
+            // Vertical Spring Peg pointing UP from trigger arm top surface (z = 3.6 -> 7.6)
             // Placed at distance 12mm along the thumb tab axis (180 degrees)
-            translate([-12.0, 0.0, 0.0])
-                mirror([0, 0, 1])
-                    cylinder(d = spring_peg_d, h = 3.0, $fn = 25);
+            translate([-12.0, 0.0, 3.6])
+                cylinder(d = spring_peg_d, h = 4.0, $fn = 25);
         }
 
         // Pin Hole (Clearance fit for M3 screw)
