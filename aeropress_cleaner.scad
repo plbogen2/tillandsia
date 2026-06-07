@@ -28,8 +28,8 @@ screw_head_d = 6.0;    // recess for M3 socket head cap screw
 screw_head_h = 2.5;
 
 // Handle and Spring peg positions
-stationary_handle_x = -105.0;
-stationary_handle_y = -15.0;
+stationary_handle_x = -98.0;
+stationary_handle_y = 0.0;
 spring_peg_d = 6.0; // fits inside 8mm ID spring
 
 // --- ANIMATION CONTROLS ---
@@ -109,11 +109,11 @@ module assembly() {
     }
     
     // 6. Mock Spring (Animated compression between pegs, global z = -4.2)
-    trigger_peg_x = trigger_pivot_x + 15.0 * cos(trigger_angle + 150.0);
-    trigger_peg_y = trigger_pivot_y + 15.0 * sin(trigger_angle + 150.0);
+    trigger_peg_x = trigger_pivot_x + 15.0 * cos(trigger_angle + 180.0);
+    trigger_peg_y = trigger_pivot_y + 15.0 * sin(trigger_angle + 180.0);
     
-    stationary_peg_x = -55.0;
-    stationary_peg_y = 35.0;
+    stationary_peg_x = -95.0;
+    stationary_peg_y = 20.0;
     
     dx = trigger_peg_x - stationary_peg_x;
     dy = trigger_peg_y - stationary_peg_y;
@@ -167,47 +167,37 @@ module ring_body() {
             hull() {
                 translate([pivot_x, pivot_y, 0.0])
                     cylinder(d = 12.0, h = 20.0, $fn = 50);
-                translate([trigger_pivot_x, trigger_pivot_y, 0.0])
-                    cylinder(d = 16.0, h = 20.0, $fn = 50);
-                translate([-(plunger_di/2 + wall_thickness - 1.0), 0, 0.0])
+                translate([stationary_handle_x, stationary_handle_y, 0.0])
+                    cylinder(d = 22.0, h = 20.0, $fn = 50);
+                translate([-(plunger_di/2 + wall_thickness - 1.0), 0.0, 0.0])
                     cylinder(d = 8.0, h = 20.0, $fn = 50);
             }
             // Lower Deck casing (z = -12 -> -8)
             hull() {
                 translate([pivot_x, pivot_y, -12.0])
                     cylinder(d = 12.0, h = 4.0, $fn = 50);
-                translate([trigger_pivot_x, trigger_pivot_y, -12.0])
-                    cylinder(d = 16.0, h = 4.0, $fn = 50);
-                translate([-(plunger_di/2 + wall_thickness - 1.0), 0, -12.0])
+                translate([stationary_handle_x, stationary_handle_y, -12.0])
+                    cylinder(d = 22.0, h = 4.0, $fn = 50);
+                translate([-(plunger_di/2 + wall_thickness - 1.0), 0.0, -12.0])
                     cylinder(d = 8.0, h = 4.0, $fn = 50);
             }
                 
             // 3. Stationary Handle Post (Cylindrical grip, z = -60 -> 20)
-            translate([-70.0, -25.0, -60.0])
+            translate([stationary_handle_x, stationary_handle_y, -60.0])
                 cylinder(d = 22.0, h = 80.0, $fn = 60);
-                
-            // 4. Handle Connection Bridge (z = 0 -> 20)
-            hull() {
-                translate([trigger_pivot_x, trigger_pivot_y, 0.0])
-                    cylinder(d = 16.0, h = 20.0, $fn = 50);
-                translate([-70.0, -25.0, 0.0])
-                    cylinder(d = 22.0, h = 20.0, $fn = 50);
-                translate([-(plunger_di/2 + wall_thickness - 1.0), -15.0, 0.0])
-                    cylinder(d = 8.0, h = 20.0, $fn = 50);
-            }
             
-            // 5. Stationary Spring Post Bracket (at clevis level z = -8 -> -4.4, thickness 3.6mm)
-            // Placed at [-55.0, 35.0] to align with trigger peg
+            // 4. Stationary Spring Post Bracket (at clevis level z = -8 -> -4.4, thickness 3.6mm)
+            // Placed at [-95.0, 20.0] to align with trigger peg
             translate([0, 0, -8.0]) {
                 hull() {
                     translate([trigger_pivot_x, trigger_pivot_y, 0.0])
                         cylinder(d = 16.0, h = 3.6, $fn = 50);
-                    translate([-55.0, 35.0, 0.0])
+                    translate([-95.0, 20.0, 0.0])
                         cylinder(d = 10.0, h = 3.6, $fn = 50);
                 }
             }
             // Vertical spring peg pointing up (starts at top of bracket z = -4.4, height 6.0)
-            translate([-55.0, 35.0, -4.4])
+            translate([-95.0, 20.0, -4.4])
                 cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
         }
 
@@ -250,8 +240,8 @@ module ring_body() {
                 cylinder(d = screw_head_d, h = screw_head_h + 0.1, $fn = 30);
                 
             // 4. Clevis knuckle slot cutout for Pivot B trigger (z = -8.1 -> 0.1)
-            // Cuts along the 150-degree trigger axis to clear knuckle rotation
-            translate([trigger_pivot_x, trigger_pivot_y, -8.1]) rotate([0, 0, 150])
+            // Cuts straight back along X-axis to clear knuckle rotation
+            translate([trigger_pivot_x, trigger_pivot_y, -8.1])
                 translate([-20.0, -8.0, 0.0])
                     cube([40.0, 16.0, 8.2]);
         }
@@ -289,25 +279,25 @@ module wiper_arm() {
 
 module trigger_lever() {
     // Geared moving thumb trigger lever (local origin [0,0,0] is Pivot B)
-    // Gear sector faces along -30 degrees, thumb tab extends along 150 degrees
+    // Gear sector faces along 0 degrees (straight right), thumb tab extends along 180 degrees (straight left)
     difference() {
         union() {
             // Knuckle & Thumb Tab base
             hull() {
                 translate([0, 0, 2.0])
                     cylinder(d = 14.0, h = 3.6, center = true, $fn = 50);
-                translate([25.0 * cos(150), 25.0 * sin(150), 2.0])
+                translate([-25.0, 0.0, 2.0])
                     cylinder(d = 10.0, h = 3.6, center = true, $fn = 50);
             }
                 
-            // 27.0mm Gear Sector pointing along -30 degrees (towards Pivot A)
-            // Teeth at local -70, -50, -30, -10, 10 degrees (pitch spacing 20 degrees, centered at -30)
-            translate([0, 0, 2.0]) rotate([0, 0, -30])
+            // 27.0mm Gear Sector pointing along 0 degrees (towards Pivot A)
+            // Teeth at local -40, -20, 0, 20, 40 degrees (pitch spacing 20 degrees, centered at 0)
+            translate([0, 0, 2.0]) rotate([0, 0, 0])
                 gear_sector(pitch_r = 27.0, num_teeth = 5, tooth_angle_span = 20.0, thickness = 3.6);
                 
             // Vertical Spring Peg pointing up from top surface (z = 3.8)
-            // Placed at distance 15mm along the thumb tab axis (150 degrees)
-            translate([15.0 * cos(150), 15.0 * sin(150), 3.8])
+            // Placed at distance 15mm along the thumb tab axis (180 degrees)
+            translate([-15.0, 0.0, 3.8])
                 cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
         }
 
