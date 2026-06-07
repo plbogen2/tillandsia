@@ -220,18 +220,18 @@ module ring_body() {
                 cylinder(d = screw_tap_d, h = 8.1, $fn = 30);
                 
             // 4. Internal Gear Pocket Cavity Cutout (z = -4.1 -> 4.1, height 8.2)
-            // Houses both gear knuckles and the trigger lever swept path (straight 20mm wide slot)
+            // Houses both gear knuckles and the trigger lever swept path (open 30mm wide slot)
             translate([0, 0, -4.1]) {
                 linear_extrude(height = 8.2) {
                     hull() {
                         translate([pivot_x, pivot_y])
-                            circle(r = 10.0, $fn = 50);
+                            circle(r = 15.0, $fn = 50);
                         translate([trigger_pivot_x, trigger_pivot_y])
-                            circle(r = 10.0, $fn = 50);
+                            circle(r = 15.0, $fn = 50);
                     }
                     // Extend pocket left to clear the trigger peg and spring
-                    translate([-100.0, -10.0])
-                        square([45.0, 20.0]);
+                    translate([-100.0, -15.0])
+                        square([45.0, 30.0]);
                 }
             }
             
