@@ -19,7 +19,7 @@ clearance = 0.2;
 // Hinge/Pivot geometry (M3 Metal Screw Pivot)
 pivot_x = -35.0;
 pivot_y = 0.0;
-trigger_pivot_x = -71.0;
+trigger_pivot_x = -80.0;
 trigger_pivot_y = 0.0;
 
 screw_tap_d = 2.8;     // M3 threads tap directly into plastic
@@ -28,7 +28,7 @@ screw_head_d = 6.0;    // recess for M3 socket head cap screw
 screw_head_h = 2.5;
 
 // Handle and Spring peg positions
-stationary_handle_x = -115.0;
+stationary_handle_x = -135.0;
 stationary_handle_y = 0.0;
 spring_peg_d = 6.0; // fits inside 8mm ID spring
 
@@ -39,16 +39,16 @@ t_val = (time_t != undef) ? time_t : $t;
 
 // Wiper Angle Animation:
 // t = 0.0 -> 0.2: Wiper parks at -90 degrees (idle)
-// t = 0.2 -> 0.5: Wiper sweeps to +45 degrees (compressing spring, crossing plunger)
+// t = 0.2 -> 0.5: Wiper sweeps to +90 degrees (compressing spring, crossing plunger)
 // t = 0.5 -> 0.8: Wiper returns to -90 degrees (spring release)
 wiper_angle = 
     (t_val < 0.2) ? -90 :
-    (t_val < 0.5) ? -90 + ((t_val - 0.2) / 0.3) * 135 :
-    (t_val < 0.8) ? 45 - ((t_val - 0.5) / 0.3) * 135 :
+    (t_val < 0.5) ? -90 + ((t_val - 0.2) / 0.3) * 180 :
+    (t_val < 0.8) ? 90 - ((t_val - 0.5) / 0.3) * 180 :
     -90;
 
-// Trigger Angle Animation: Squeezes clockwise from -90 -> -135 linked to wiper (ratio 3:1)
-trigger_angle = -90.0 - (wiper_angle + 90.0) / 3.0;
+// Trigger Angle Animation: Squeezes clockwise from -90 -> -135 linked to wiper (ratio 4:1)
+trigger_angle = -90.0 - (wiper_angle + 90.0) / 4.0;
 
 
 // Plunger insertion animation
@@ -112,7 +112,7 @@ module assembly() {
     trigger_peg_x = trigger_pivot_x + 15.0 * cos(trigger_angle + 180.0);
     trigger_peg_y = trigger_pivot_y + 15.0 * sin(trigger_angle + 180.0);
     
-    stationary_peg_x = -86.0;
+    stationary_peg_x = -95.0;
     stationary_peg_y = 15.0;
     
     dx = trigger_peg_x - stationary_peg_x;
@@ -183,13 +183,13 @@ module ring_body() {
             }
                 
             // 3. Stationary Handle Post (Thin offset horizontal grip, centered at z = -25.0)
-            // Round cylinder (D=20.0, length 80mm from X=-85 to X=-165)
+            // Round cylinder (D=20.0, length 80mm from X=-95 to X=-175)
             hull() {
-                translate([-85.0, 0.0, -25.0])
+                translate([-95.0, 0.0, -25.0])
                     rotate([0, 90, 0])
                         cylinder(d = 20.0, h = 80.0, center=false, $fn = 60);
-                // Hemispherical rounded end at X = -165.0
-                translate([-165.0, 0.0, -25.0])
+                // Hemispherical rounded end at X = -175.0
+                translate([-175.0, 0.0, -25.0])
                     sphere(d = 20.0, $fn = 60);
             }
             
@@ -197,23 +197,23 @@ module ring_body() {
             hull() {
                 translate([trigger_pivot_x, trigger_pivot_y, -12.0])
                     cylinder(d = 16.0, h = 4.0, $fn = 50);
-                translate([-85.0, 0.0, -25.0])
+                translate([-95.0, 0.0, -25.0])
                     rotate([0, 90, 0])
                         cylinder(d = 20.0, h = 5.0, center=false, $fn = 60);
             }
             
             // 4. Stationary Spring Post Bracket (extends from handle neck at z = -15 -> -12)
-            // Placed at [-86.0, 15.0] to align with trigger peg
+            // Placed at [-95.0, 15.0] to align with trigger peg
             translate([0, 0, -15.0]) {
                 hull() {
-                    translate([-86.0, 0.0, 0.0])
+                    translate([-95.0, 0.0, 0.0])
                         cylinder(d = 20.0, h = 3.0, $fn = 50);
-                    translate([-86.0, 15.0, 0.0])
+                    translate([-95.0, 15.0, 0.0])
                         cylinder(d = 8.0, h = 3.0, $fn = 50);
                 }
             }
             // Vertical spring peg pointing up (starts at top of bracket z = -12.0, height 6.0)
-            translate([-86.0, 15.0, -12.0])
+            translate([-95.0, 15.0, -12.0])
                 cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
         }
 
@@ -278,9 +278,9 @@ module wiper_arm() {
                 cube([65.0, 5.0, 3.6]);
                 
             // 9.0mm Pinion Gear Sector pointing along -X (180 degrees)
-            // Teeth at local 120, 180, 240 degrees (pitch spacing 60 degrees)
+            // Teeth at local -90, -30, 30, 90 degrees relative to 180 (spans 180 degrees total)
             translate([0, 0, 2.0]) rotate([0, 0, 180])
-                gear_sector(pitch_r = 9.0, num_teeth = 3, tooth_angle_span = 60.0, thickness = 3.6);
+                gear_sector(pitch_r = 9.0, num_teeth = 4, tooth_angle_span = 60.0, thickness = 3.6);
         }
 
         // Pin Hole (Clearance fit for M3 screw)
@@ -306,10 +306,10 @@ module trigger_lever() {
                     cylinder(d = 10.0, h = 3.6, center = true, $fn = 50);
             }
                 
-            // 27.0mm Gear Sector pointing along 0 degrees (towards Pivot A)
-            // Teeth at local -40, -20, 0, 20, 40 degrees (pitch spacing 20 degrees, centered at 0)
-            translate([0, 0, 2.0]) rotate([0, 0, 0])
-                gear_sector(pitch_r = 27.0, num_teeth = 5, tooth_angle_span = 20.0, thickness = 3.6);
+            // 27.0mm Gear Sector rotated by local 112.5 degrees to mesh with Pivot A
+            // Teeth at local 82.5, 97.5, 112.5, 127.5, 142.5 degrees (pitch spacing 15 degrees)
+            translate([0, 0, 2.0]) rotate([0, 0, 112.5])
+                gear_sector(pitch_r = 27.0, num_teeth = 5, tooth_angle_span = 15.0, thickness = 3.6);
                 
             // Vertical Spring Peg pointing down from bottom surface (z = 0.2)
             // Placed at distance 15mm along the thumb tab axis (180 degrees)
