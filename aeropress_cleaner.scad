@@ -112,8 +112,8 @@ module assembly() {
     trigger_peg_x = trigger_pivot_x + 15.0 * cos(trigger_angle + 180.0);
     trigger_peg_y = trigger_pivot_y + 15.0 * sin(trigger_angle + 180.0);
     
-    stationary_peg_x = -95.0;
-    stationary_peg_y = 20.0;
+    stationary_peg_x = -86.0;
+    stationary_peg_y = 15.0;
     
     dx = trigger_peg_x - stationary_peg_x;
     dy = trigger_peg_y - stationary_peg_y;
@@ -121,7 +121,7 @@ module assembly() {
     angle = atan2(dy, dx);
     
     color("silver")
-        translate([stationary_peg_x, stationary_peg_y, -4.2])
+        translate([stationary_peg_x, stationary_peg_y, -10.0])
             rotate([0, 0, angle])
                 rotate([0, 90, 0])
                     cylinder(d = 8.0, h = dist, $fn=20);
@@ -182,27 +182,38 @@ module ring_body() {
                     cylinder(d = 8.0, h = 4.0, $fn = 50);
             }
                 
-            // 3. Stationary Handle Post (Inline cylindrical grip, z = -60 -> 20)
-            // Hull of two cylinders to make a long comfortable horizontal bar
+            // 3. Stationary Handle Post (Thin offset horizontal grip, centered at z = -25.0)
+            // Round cylinder (D=20.0, length 80mm from X=-85 to X=-165)
             hull() {
-                translate([-85.0, 0.0, -60.0])
-                    cylinder(d = 22.0, h = 80.0, $fn = 60);
-                translate([-145.0, 0.0, -60.0])
-                    cylinder(d = 22.0, h = 80.0, $fn = 60);
+                translate([-85.0, 0.0, -25.0])
+                    rotate([0, 90, 0])
+                        cylinder(d = 20.0, h = 80.0, center=false, $fn = 60);
+                // Hemispherical rounded end at X = -165.0
+                translate([-165.0, 0.0, -25.0])
+                    sphere(d = 20.0, $fn = 60);
             }
             
-            // 4. Stationary Spring Post Bracket (at clevis level z = -8 -> -4.4, thickness 3.6mm)
-            // Extends from the side of the handle body to [-95.0, 20.0]
-            translate([0, 0, -8.0]) {
+            // Neck Support (bridges lower deck casing at z = -12 -> -8 down to handle start at z = -35 -> -15)
+            hull() {
+                translate([trigger_pivot_x, trigger_pivot_y, -12.0])
+                    cylinder(d = 16.0, h = 4.0, $fn = 50);
+                translate([-85.0, 0.0, -25.0])
+                    rotate([0, 90, 0])
+                        cylinder(d = 20.0, h = 5.0, center=false, $fn = 60);
+            }
+            
+            // 4. Stationary Spring Post Bracket (extends from handle neck at z = -15 -> -12)
+            // Placed at [-86.0, 15.0] to align with trigger peg
+            translate([0, 0, -15.0]) {
                 hull() {
-                    translate([-95.0, 0.0, 0.0])
-                        cylinder(d = 22.0, h = 3.6, $fn = 50);
-                    translate([-95.0, 20.0, 0.0])
-                        cylinder(d = 10.0, h = 3.6, $fn = 50);
+                    translate([-86.0, 0.0, 0.0])
+                        cylinder(d = 20.0, h = 3.0, $fn = 50);
+                    translate([-86.0, 15.0, 0.0])
+                        cylinder(d = 8.0, h = 3.0, $fn = 50);
                 }
             }
-            // Vertical spring peg pointing up (starts at top of bracket z = -4.4, height 6.0)
-            translate([-95.0, 20.0, -4.4])
+            // Vertical spring peg pointing up (starts at top of bracket z = -12.0, height 6.0)
+            translate([-86.0, 15.0, -12.0])
                 cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
         }
 
@@ -300,10 +311,11 @@ module trigger_lever() {
             translate([0, 0, 2.0]) rotate([0, 0, 0])
                 gear_sector(pitch_r = 27.0, num_teeth = 5, tooth_angle_span = 20.0, thickness = 3.6);
                 
-            // Vertical Spring Peg pointing up from top surface (z = 3.8)
+            // Vertical Spring Peg pointing down from bottom surface (z = 0.2)
             // Placed at distance 15mm along the thumb tab axis (180 degrees)
-            translate([-15.0, 0.0, 3.8])
-                cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
+            translate([-15.0, 0.0, 0.2])
+                mirror([0, 0, 1])
+                    cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
         }
 
         // Pin Hole (Clearance fit for M3 screw)
