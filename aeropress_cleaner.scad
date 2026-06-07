@@ -158,15 +158,29 @@ module ring_body() {
                 }
             }
             
-            // 2. Dual-Pivot Integrated Handle Casing (z = -12.0 -> 12.0)
-            // Solid casing block including the flat horizontal handle
+            // 2. Dual-Pivot Integrated Bulbous Handle Casing (z = -12.0 -> 12.0)
+            // A. Bulbous Gearbox Casing enclosing Pivot A (D=24) and Pivot B (D=80)
             hull() {
                 translate([pivot_x, pivot_y, 0.0])
-                    cylinder(d = 12.0, h = 24.0, center = true, $fn = 50);
+                    cylinder(d = 24.0, h = 24.0, center = true, $fn = 50);
                 translate([trigger_pivot_x, trigger_pivot_y, 0.0])
-                    cylinder(d = 16.0, h = 24.0, center = true, $fn = 50);
+                    cylinder(d = 80.0, h = 24.0, center = true, $fn = 60);
+            }
+            
+            // B. Tapered neck transition from Pivot B (D=80) to handle grip start (D=20 at X=-95)
+            hull() {
+                translate([trigger_pivot_x, trigger_pivot_y, 0.0])
+                    cylinder(d = 80.0, h = 24.0, center = true, $fn = 60);
+                translate([-95.0, 0.0, 0.0])
+                    cylinder(d = 20.0, h = 24.0, center = true, $fn = 50);
+            }
+            
+            // C. Narrow paddle handle grip (D=20 from X=-95 to X=-160)
+            hull() {
+                translate([-95.0, 0.0, 0.0])
+                    cylinder(d = 20.0, h = 24.0, center = true, $fn = 50);
                 translate([-160.0, 0.0, 0.0])
-                    cylinder(d = 20.0, h = 24.0, center = true, $fn = 60);
+                    cylinder(d = 20.0, h = 24.0, center = true, $fn = 50);
             }
             
             // 3. Stationary Spring Post (starts at bottom plate floor z = -4.0, height 6.0)
@@ -227,7 +241,7 @@ module ring_body() {
                         translate([pivot_x, pivot_y])
                             circle(r = 11.0, $fn = 50);
                         translate([trigger_pivot_x, trigger_pivot_y])
-                            circle(r = 29.0, $fn = 50);
+                            circle(r = 38.0, $fn = 60);
                     }
                     // Extend pocket left to clear the trigger tab base and spring
                     translate([-120.0, -15.0])
