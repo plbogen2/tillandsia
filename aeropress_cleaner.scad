@@ -82,7 +82,7 @@ module assembly() {
     ring_body();
     
     // 2. Wiper Arm & Blade (Pivot A)
-    translate([pivot_x, pivot_y, -8.0]) {
+    translate([pivot_x, pivot_y, 0.0]) {
         rotate([0, 0, wiper_angle]) {
             color("green") wiper_arm();
             color("blue") wiper_blade();
@@ -90,7 +90,7 @@ module assembly() {
     }
     
     // 3. Trigger Lever (Pivot B)
-    translate([trigger_pivot_x, trigger_pivot_y, -8.0]) {
+    translate([trigger_pivot_x, trigger_pivot_y, 0.0]) {
         rotate([0, 0, trigger_angle]) {
             color("green") trigger_lever();
         }
@@ -98,9 +98,9 @@ module assembly() {
     
     // 4. M3 Metal Pivot Screws (Pivot A & B)
     translate([pivot_x, pivot_y, -12.0])
-        mock_m3_screw(len = 12.0);
+        mock_m3_screw(len = 24.0);
     translate([trigger_pivot_x, trigger_pivot_y, -12.0])
-        mock_m3_screw(len = 12.0);
+        mock_m3_screw(len = 24.0);
             
     // 5. Mock Plunger (Animated)
     if (animate || t_val > 0) {
