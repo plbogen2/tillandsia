@@ -39,15 +39,15 @@ t_val = (time_t != undef) ? time_t : $t;
 
 // Wiper Angle Animation:
 // t = 0.0 -> 0.2: Wiper parks at -90 degrees (idle)
-// t = 0.2 -> 0.5: Wiper sweeps to +90 degrees (compressing spring, crossing plunger)
-// t = 0.5 -> 0.8: Wiper returns to -90 degrees (spring release)
+// t = 0.2 -> 0.5: Wiper sweeps clockwise to -270 degrees (compressing spring)
+// t = 0.5 -> 0.8: Wiper returns counter-clockwise to -90 degrees
 wiper_angle = 
     (t_val < 0.2) ? -90 :
-    (t_val < 0.5) ? -90 + ((t_val - 0.2) / 0.3) * 180 :
-    (t_val < 0.8) ? 90 - ((t_val - 0.5) / 0.3) * 180 :
+    (t_val < 0.5) ? -90 - ((t_val - 0.2) / 0.3) * 180 :
+    (t_val < 0.8) ? -270 + ((t_val - 0.5) / 0.3) * 180 :
     -90;
 
-// Trigger Angle Animation: Squeezes clockwise from -90 -> -135 linked to wiper (ratio 4:1)
+// Trigger Angle Animation: Squeezes counter-clockwise from -90 -> -45 linked to wiper (ratio 4:1)
 trigger_angle = -90.0 - (wiper_angle + 90.0) / 4.0;
 
 
@@ -290,8 +290,8 @@ module trigger_lever() {
             }
                 
             // 27.0mm Gear Sector centered at Z=0 (thickness 3.6mm, z = -1.8 -> 1.8)
-            // Teeth at local 82.5, 97.5, 112.5, 127.5, 142.5 degrees (pitch spacing 15 degrees)
-            rotate([0, 0, 112.5])
+            // Teeth at local 37.5, 52.5, 67.5, 82.5, 97.5 degrees (pitch spacing 15 degrees)
+            rotate([0, 0, 67.5])
                 gear_sector(pitch_r = 27.0, num_teeth = 5, tooth_angle_span = 15.0, thickness = 3.6);
                 
             // Vertical Spring Peg pointing down from knuckle center (z = 0.0 -> -3.0)
