@@ -108,12 +108,12 @@ module assembly() {
             mock_plunger();
     }
     
-    // 6. Mock Spring (Animated compression between pegs)
+    // 6. Mock Spring (Animated compression between pegs, global z = -6.2)
     trigger_peg_x = trigger_pivot_x - 5.0 * cos(trigger_angle) + 35.0 * sin(trigger_angle);
     trigger_peg_y = trigger_pivot_y - 5.0 * sin(trigger_angle) - 35.0 * cos(trigger_angle);
     
-    stationary_peg_x = stationary_handle_x + 10.0;
-    stationary_peg_y = stationary_handle_y;
+    stationary_peg_x = -100.0;
+    stationary_peg_y = -35.0;
     
     dx = trigger_peg_x - stationary_peg_x;
     dy = trigger_peg_y - stationary_peg_y;
@@ -121,7 +121,7 @@ module assembly() {
     angle = atan2(dy, dx);
     
     color("silver")
-        translate([stationary_peg_x, stationary_peg_y, -2.4])
+        translate([stationary_peg_x, stationary_peg_y, -6.2])
             rotate([0, 0, angle])
                 rotate([0, 90, 0])
                     cylinder(d = 8.0, h = dist, $fn=20);
@@ -171,29 +171,20 @@ module ring_body() {
             translate([-71.0, -7.0, -12.0])
                 cube([42.4, 14.0, 4.0]);
                 
-            // 3. Stationary Handle Post (Ice Cream Scoop grip, z = -60 -> 20)
-            translate([stationary_handle_x, stationary_handle_y, -60.0])
-                cylinder(d = 14.0, h = 80.0, $fn = 50);
-                
-            // 4. Handle Support Bridge (bridges casing at [-71,0] to Handle at [-105,-15], z = 0 -> 20)
+            // 3. Ice Cream Scoop C-Handle Shell (z = -60 -> 20)
+            // Encloses the trigger Pivot B and extends downwards to form the handle back wall
             hull() {
                 translate([trigger_pivot_x, trigger_pivot_y, 0.0])
-                    cylinder(d = 14.0, h = 20.0, $fn = 50);
-                translate([stationary_handle_x, stationary_handle_y, 0.0])
-                    cylinder(d = 14.0, h = 20.0, $fn = 50);
+                    cylinder(d = 16.0, h = 20.0, $fn = 50);
+                translate([-108.0, -15.0, -60.0])
+                    cylinder(d = 16.0, h = 80.0, $fn = 50);
+                translate([-108.0, -55.0, -60.0])
+                    cylinder(d = 16.0, h = 80.0, $fn = 50);
             }
             
-            // 5. Stationary Spring Peg Bracket (global z = -8 -> -4.4, thickness 3.6mm, holds spring peg)
-            translate([0, 0, -8.0]) {
-                hull() {
-                    translate([stationary_handle_x, stationary_handle_y, 0.0])
-                        cylinder(d = 12.0, h = 3.6, $fn = 50);
-                    translate([stationary_handle_x + 10.0, stationary_handle_y, 0.0])
-                        cylinder(d = 8.0, h = 3.6, $fn = 50);
-                }
-            }
-            // Vertical spring peg pointing up (starts at top of bracket z = -4.4, height 6.0)
-            translate([stationary_handle_x + 10.0, stationary_handle_y, -4.4])
+            // 4. Stationary Spring Peg Bracket (bridges handle post to back of pocket at X = -100)
+            // This is just the horizontal peg pointing along +X (starts at back wall X = -100.0, global z = -6.2)
+            translate([-100.0, -35.0, -6.2]) rotate([0, 90, 0])
                 cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
         }
 
@@ -234,6 +225,16 @@ module ring_body() {
                 cylinder(d = screw_clearance_d, h = 4.2, $fn = 30);
             translate([trigger_pivot_x, trigger_pivot_y, -12.1])
                 cylinder(d = screw_head_d, h = screw_head_h + 0.1, $fn = 30);
+                
+            // 4. U-channel nesting cavity pocket for trigger lever and spring (z = -61 -> 21)
+            // Cuts a pocket from X = -100 to -68, and Y = -60 to -12, leaving X > -68 completely open to the right
+            translate([-100.0, -60.0, -61.0])
+                cube([32.0, 48.0, 82.0]);
+                
+            // 5. Clevis knuckle slot cutout for Pivot B trigger (z = -8.1 -> 0.1)
+            // Cuts from X = -85 to -60 to clear the moving trigger knuckle
+            translate([-85.0, -12.0, -8.1])
+                cube([25.0, 24.0, 8.2]);
         }
     }
 }
@@ -289,8 +290,8 @@ module trigger_lever() {
             translate([-10.0, -60.0, 0.2])
                 cube([20.0, 10.0, 3.6]);
                 
-            // Vertical Spring Peg pointing along +Z (from top surface z = 3.8)
-            translate([-5.0, -35.0, 3.8])
+            // Horizontal Spring Peg pointing along -X (towards back wall, centered at z=2.0)
+            translate([-5.0, -35.0, 2.0]) rotate([0, -90, 0])
                 cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
         }
 
