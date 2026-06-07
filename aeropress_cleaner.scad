@@ -112,8 +112,8 @@ module assembly() {
     trigger_peg_x = trigger_pivot_x + 12.0 * cos(trigger_angle + 180.0);
     trigger_peg_y = trigger_pivot_y + 12.0 * sin(trigger_angle + 180.0);
     
-    stationary_peg_x = -48.0;
-    stationary_peg_y = 8.0;
+    stationary_peg_x = -85.0;
+    stationary_peg_y = 0.0;
     
     dx = trigger_peg_x - stationary_peg_x;
     dy = trigger_peg_y - stationary_peg_y;
@@ -170,8 +170,8 @@ module ring_body() {
             }
             
             // 3. Stationary Spring Post (starts at bottom plate top surface z = -4.0, height 6.0)
-            // Points up. Placed at [-48.0, 8.0] inside the slot
-            translate([-48.0, 8.0, -4.0])
+            // Points up. Placed at [-85.0, 0.0] inside the slot (clears the sector gear sweep)
+            translate([-85.0, 0.0, -4.0])
                 cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
         }
 
