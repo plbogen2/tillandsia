@@ -28,7 +28,7 @@ screw_head_d = 6.0;    // recess for M3 socket head cap screw
 screw_head_h = 2.5;
 
 // Handle and Spring peg positions
-stationary_handle_x = -98.0;
+stationary_handle_x = -115.0;
 stationary_handle_y = 0.0;
 spring_peg_d = 6.0; // fits inside 8mm ID spring
 
@@ -167,8 +167,8 @@ module ring_body() {
             hull() {
                 translate([pivot_x, pivot_y, 0.0])
                     cylinder(d = 12.0, h = 20.0, $fn = 50);
-                translate([stationary_handle_x, stationary_handle_y, 0.0])
-                    cylinder(d = 22.0, h = 20.0, $fn = 50);
+                translate([trigger_pivot_x, trigger_pivot_y, 0.0])
+                    cylinder(d = 16.0, h = 20.0, $fn = 50);
                 translate([-(plunger_di/2 + wall_thickness - 1.0), 0.0, 0.0])
                     cylinder(d = 8.0, h = 20.0, $fn = 50);
             }
@@ -176,22 +176,27 @@ module ring_body() {
             hull() {
                 translate([pivot_x, pivot_y, -12.0])
                     cylinder(d = 12.0, h = 4.0, $fn = 50);
-                translate([stationary_handle_x, stationary_handle_y, -12.0])
-                    cylinder(d = 22.0, h = 4.0, $fn = 50);
+                translate([trigger_pivot_x, trigger_pivot_y, -12.0])
+                    cylinder(d = 16.0, h = 4.0, $fn = 50);
                 translate([-(plunger_di/2 + wall_thickness - 1.0), 0.0, -12.0])
                     cylinder(d = 8.0, h = 4.0, $fn = 50);
             }
                 
-            // 3. Stationary Handle Post (Cylindrical grip, z = -60 -> 20)
-            translate([stationary_handle_x, stationary_handle_y, -60.0])
-                cylinder(d = 22.0, h = 80.0, $fn = 60);
+            // 3. Stationary Handle Post (Inline cylindrical grip, z = -60 -> 20)
+            // Hull of two cylinders to make a long comfortable horizontal bar
+            hull() {
+                translate([-85.0, 0.0, -60.0])
+                    cylinder(d = 22.0, h = 80.0, $fn = 60);
+                translate([-145.0, 0.0, -60.0])
+                    cylinder(d = 22.0, h = 80.0, $fn = 60);
+            }
             
             // 4. Stationary Spring Post Bracket (at clevis level z = -8 -> -4.4, thickness 3.6mm)
-            // Placed at [-95.0, 20.0] to align with trigger peg
+            // Extends from the side of the handle body to [-95.0, 20.0]
             translate([0, 0, -8.0]) {
                 hull() {
-                    translate([trigger_pivot_x, trigger_pivot_y, 0.0])
-                        cylinder(d = 16.0, h = 3.6, $fn = 50);
+                    translate([-95.0, 0.0, 0.0])
+                        cylinder(d = 22.0, h = 3.6, $fn = 50);
                     translate([-95.0, 20.0, 0.0])
                         cylinder(d = 10.0, h = 3.6, $fn = 50);
                 }
