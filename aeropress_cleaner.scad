@@ -121,7 +121,7 @@ module assembly() {
     angle = atan2(dy, dx);
     
     color("silver")
-        translate([stationary_peg_x, stationary_peg_y, -10.0])
+        translate([stationary_peg_x, stationary_peg_y, -2.0])
             rotate([0, 0, angle])
                 rotate([0, 90, 0])
                     cylinder(d = 8.0, h = dist, $fn=20);
@@ -158,58 +158,20 @@ module ring_body() {
                 }
             }
             
-            // 2. Dual-Pivot Gearbox Casing (Upper Deck: z = 0 -> 20, Lower Deck: z = -12 -> -8)
-            // Upper Deck casing (z = 0 -> 20)
+            // 2. Dual-Pivot Integrated Handle Casing (z = -12.0 -> 12.0)
+            // Solid casing block including the flat horizontal handle
             hull() {
                 translate([pivot_x, pivot_y, 0.0])
-                    cylinder(d = 12.0, h = 20.0, $fn = 50);
+                    cylinder(d = 12.0, h = 24.0, center = true, $fn = 50);
                 translate([trigger_pivot_x, trigger_pivot_y, 0.0])
-                    cylinder(d = 16.0, h = 20.0, $fn = 50);
-                translate([-(plunger_di/2 + wall_thickness - 1.0), 0.0, 0.0])
-                    cylinder(d = 8.0, h = 20.0, $fn = 50);
-            }
-            // Lower Deck casing (z = -12 -> -8)
-            hull() {
-                translate([pivot_x, pivot_y, -12.0])
-                    cylinder(d = 12.0, h = 4.0, $fn = 50);
-                translate([trigger_pivot_x, trigger_pivot_y, -12.0])
-                    cylinder(d = 16.0, h = 4.0, $fn = 50);
-                translate([-(plunger_di/2 + wall_thickness - 1.0), 0.0, -12.0])
-                    cylinder(d = 8.0, h = 4.0, $fn = 50);
-            }
-                
-            // 3. Stationary Handle Post (Thin offset horizontal grip, centered at z = -25.0)
-            // Round cylinder (D=20.0, length 80mm from X=-95 to X=-175)
-            hull() {
-                translate([-95.0, 0.0, -25.0])
-                    rotate([0, 90, 0])
-                        cylinder(d = 20.0, h = 80.0, center=false, $fn = 60);
-                // Hemispherical rounded end at X = -175.0
-                translate([-175.0, 0.0, -25.0])
-                    sphere(d = 20.0, $fn = 60);
+                    cylinder(d = 16.0, h = 24.0, center = true, $fn = 50);
+                translate([-160.0, 0.0, 0.0])
+                    cylinder(d = 20.0, h = 24.0, center = true, $fn = 60);
             }
             
-            // Neck Support (bridges lower deck casing at z = -12 -> -8 down to handle start at z = -35 -> -15)
-            hull() {
-                translate([trigger_pivot_x, trigger_pivot_y, -12.0])
-                    cylinder(d = 16.0, h = 4.0, $fn = 50);
-                translate([-95.0, 0.0, -25.0])
-                    rotate([0, 90, 0])
-                        cylinder(d = 20.0, h = 5.0, center=false, $fn = 60);
-            }
-            
-            // 4. Stationary Spring Post Bracket (extends from handle neck at z = -15 -> -12)
-            // Placed at [-65.0, 10.0] to support horizontal compression spring
-            translate([0, 0, -15.0]) {
-                hull() {
-                    translate([-95.0, 0.0, 0.0])
-                        cylinder(d = 20.0, h = 3.0, $fn = 50);
-                    translate([-65.0, 10.0, 0.0])
-                        cylinder(d = 8.0, h = 3.0, $fn = 50);
-                }
-            }
-            // Vertical spring peg pointing up (starts at top of bracket z = -12.0, height 6.0)
-            translate([-65.0, 10.0, -12.0])
+            // 3. Stationary Spring Post (starts at bottom plate floor z = -4.0, height 6.0)
+            // Placed at [-65.0, 10.0] inside the gear cavity slot
+            translate([-65.0, 10.0, -4.0])
                 cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
         }
 
@@ -236,26 +198,42 @@ module ring_body() {
             }
                 
             // M3 Screw Pivot holes (Pivot A):
-            translate([pivot_x, pivot_y, -4.1])
-                cylinder(d = screw_tap_d, h = 4.2, $fn = 30);
-            translate([pivot_x, pivot_y, -12.1])
-                cylinder(d = screw_clearance_d, h = 4.2, $fn = 30);
+            // Head recess at bottom:
             translate([pivot_x, pivot_y, -12.1])
                 cylinder(d = screw_head_d, h = screw_head_h + 0.1, $fn = 30);
+            // Clearance hole through bottom floor & knuckle:
+            translate([pivot_x, pivot_y, -12.1])
+                cylinder(d = screw_clearance_d, h = 16.2, $fn = 30);
+            // Tap hole in top plate (z = 4.0 -> 12.0):
+            translate([pivot_x, pivot_y, 4.0])
+                cylinder(d = screw_tap_d, h = 8.1, $fn = 30);
                 
             // M3 Screw Pivot holes (Pivot B - Trigger):
-            translate([trigger_pivot_x, trigger_pivot_y, -4.1])
-                cylinder(d = screw_tap_d, h = 4.2, $fn = 30);
-            translate([trigger_pivot_x, trigger_pivot_y, -12.1])
-                cylinder(d = screw_clearance_d, h = 4.2, $fn = 30);
+            // Head recess at bottom:
             translate([trigger_pivot_x, trigger_pivot_y, -12.1])
                 cylinder(d = screw_head_d, h = screw_head_h + 0.1, $fn = 30);
+            // Clearance hole through bottom floor & knuckle:
+            translate([trigger_pivot_x, trigger_pivot_y, -12.1])
+                cylinder(d = screw_clearance_d, h = 16.2, $fn = 30);
+            // Tap hole in top plate (z = 4.0 -> 12.0):
+            translate([trigger_pivot_x, trigger_pivot_y, 4.0])
+                cylinder(d = screw_tap_d, h = 8.1, $fn = 30);
                 
-            // 4. Clevis knuckle slot cutout for Pivot B trigger (z = -8.1 -> 0.1)
-            // Cuts straight back along X-axis to clear knuckle rotation
-            translate([trigger_pivot_x, trigger_pivot_y, -8.1])
-                translate([-20.0, -8.0, 0.0])
-                    cube([40.0, 16.0, 8.2]);
+            // 4. Internal Gear Pocket Cavity Cutout (z = -4.1 -> 4.1, height 8.2)
+            // Houses both gear knuckles and the trigger lever swept path
+            translate([0, 0, -4.1]) {
+                linear_extrude(height = 8.2) {
+                    hull() {
+                        translate([pivot_x, pivot_y])
+                            circle(r = 11.0, $fn = 50);
+                        translate([trigger_pivot_x, trigger_pivot_y])
+                            circle(r = 29.0, $fn = 50);
+                    }
+                    // Extend pocket left to clear the trigger tab base and spring
+                    translate([-120.0, -15.0])
+                        cube([60.0, 30.0]);
+                }
+            }
         }
     }
 }
@@ -265,27 +243,25 @@ module wiper_arm() {
     // Squeegee arm points along +X, gear sector faces along -X (180 degrees)
     difference() {
         union() {
-            // Knuckle (middle pivot block: z = 0.2 -> 3.8)
-            translate([0, 0, 2.0])
-                cylinder(d = 11.6, h = 3.6, center = true, $fn = 50);
+            // Knuckle (middle pivot block: z = -3.6 -> 3.6, height 7.2)
+            cylinder(d = 11.6, h = 7.2, center = true, $fn = 50);
                 
-            // Wiper Arm pointing along +X locally (length 63.0mm)
-            translate([0, -2.5, 0.2])
+            // Wiper Arm pointing along +X locally (length 63.0mm, thickness 3.6mm, z = -1.8 -> 1.8)
+            translate([0, -2.5, -1.8])
                 cube([63.0, 5.0, 3.6]);
                 
-            // 9.0mm Pinion Gear Sector pointing along -X (180 degrees)
+            // 9.0mm Pinion Gear Sector centered at Z=0 (thickness 3.6mm, z = -1.8 -> 1.8)
             // Teeth at local -90, -30, 30, 90 degrees relative to 180 (spans 180 degrees total)
-            translate([0, 0, 2.0]) rotate([0, 0, 180])
+            rotate([0, 0, 180])
                 gear_sector(pitch_r = 9.0, num_teeth = 4, tooth_angle_span = 60.0, thickness = 3.6);
         }
 
         // Pin Hole (Clearance fit for M3 screw)
-        translate([0, 0, -1])
-            cylinder(d = screw_clearance_d, h = 6, $fn = 30);
+        cylinder(d = screw_clearance_d, h = 10.0, center = true, $fn = 30);
             
-        // Wiper Blade slot (width 1.5mm, depth 2.2mm, z = 1.8 -> 4.0)
-        translate([8.0, -0.75, 1.8])
-            cube([55.0, 1.5, 2.2]);
+        // Wiper Blade slot (width 1.5mm, depth 5.0mm, z = -1.8 -> 3.2)
+        translate([8.0, -0.75, -1.8])
+            cube([55.0, 1.5, 5.0]);
     }
 }
 
@@ -294,29 +270,39 @@ module trigger_lever() {
     // Gear sector faces along 0 degrees (straight right), thumb tab extends along 180 degrees (straight left)
     difference() {
         union() {
-            // Knuckle & Thumb Tab base
+            // Knuckle (middle pivot block: z = -3.6 -> 3.6, height 7.2)
+            cylinder(d = 14.0, h = 7.2, center = true, $fn = 50);
+            
+            // Vertical Gooseneck Riser (hulls from knuckle at z=0 to top deck at z=12)
             hull() {
-                translate([0, 0, 2.0])
-                    cylinder(d = 14.0, h = 3.6, center = true, $fn = 50);
-                translate([-25.0, 0.0, 2.0])
+                cylinder(d = 14.0, h = 1.0, center = true, $fn = 50);
+                translate([-15.0, 0.0, 12.0])
+                    cylinder(d = 10.0, h = 1.0, center = true, $fn = 50);
+            }
+            
+            // Thumb Tab horizontal plate (sitting on top of handle deck z = 12.0, thickness 3.6mm)
+            translate([-15.0, 0.0, 12.0]) {
+                hull() {
                     cylinder(d = 10.0, h = 3.6, center = true, $fn = 50);
+                    translate([-15.0, 0.0, 0.0])
+                        cylinder(d = 10.0, h = 3.6, center = true, $fn = 50);
+                }
             }
                 
-            // 27.0mm Gear Sector rotated by local 112.5 degrees to mesh with Pivot A
+            // 27.0mm Gear Sector centered at Z=0 (thickness 3.6mm, z = -1.8 -> 1.8)
             // Teeth at local 82.5, 97.5, 112.5, 127.5, 142.5 degrees (pitch spacing 15 degrees)
-            translate([0, 0, 2.0]) rotate([0, 0, 112.5])
+            rotate([0, 0, 112.5])
                 gear_sector(pitch_r = 27.0, num_teeth = 5, tooth_angle_span = 15.0, thickness = 3.6);
                 
-            // Vertical Spring Peg pointing down from bottom surface (z = 0.2)
+            // Vertical Spring Peg pointing down from knuckle center (z = 0.0 -> -3.0)
             // Placed at distance 15mm along the thumb tab axis (180 degrees)
-            translate([-15.0, 0.0, 0.2])
+            translate([-15.0, 0.0, 0.0])
                 mirror([0, 0, 1])
-                    cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
+                    cylinder(d = spring_peg_d, h = 3.0, $fn = 25);
         }
 
         // Pin Hole (Clearance fit for M3 screw)
-        translate([0, 0, -1])
-            cylinder(d = screw_clearance_d, h = 6, $fn = 30);
+        cylinder(d = screw_clearance_d, h = 10.0, center = true, $fn = 30);
     }
 }
 
@@ -324,14 +310,14 @@ module wiper_blade() {
     // Flexible TPU squeegee blade
     // Fits into the wiper arm slot and extends upwards to scrape the plunger face.
     // Shifted to start at local x = 8.0 to clear pivot knuckle.
-    // Total length is 57.0mm.
-    // Total height is 8.0mm (2.2mm in slot, 5.8mm sticking out).
-    translate([8.0, -0.75, 1.8]) {
+    // Total length is 55.0mm.
+    // Total height is 8.0mm (5.0mm in slot, 3.0mm sticking out).
+    translate([8.0, -0.75, -1.8]) {
         // Base slot block
-        cube([57.0, 1.5, 2.2]);
-        // Squeegee flap (5.8mm sticks out, total height 8.0mm)
-        translate([0, 0, 2.2])
-            cube([57.0, 1.0, 5.8]);
+        cube([55.0, 1.5, 5.0]);
+        // Squeegee flap (3.0mm sticks out, total height 8.0mm, z = 3.2 -> 6.2)
+        translate([0, 0, 5.0])
+            cube([55.0, 1.0, 3.0]);
     }
 }
 
