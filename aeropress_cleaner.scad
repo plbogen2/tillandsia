@@ -120,7 +120,7 @@ module assembly() {
     dist = sqrt(dx*dx + dy*dy);
     angle = atan2(dy, dx);
     
-    color("silver")
+    color("red")
         translate([stationary_peg_x, stationary_peg_y, -2.0])
             rotate([0, 0, angle])
                 rotate([0, 90, 0])
@@ -276,12 +276,12 @@ module trigger_lever() {
             // Vertical Gooseneck Riser (hulls from knuckle at z=0 to top deck at z=12)
             hull() {
                 cylinder(d = 14.0, h = 1.0, center = true, $fn = 50);
-                translate([-15.0, 0.0, 12.0])
+                translate([-15.0, 0.0, 13.5])
                     cylinder(d = 10.0, h = 1.0, center = true, $fn = 50);
             }
             
-            // Thumb Tab horizontal plate (sitting on top of handle deck z = 12.0, thickness 3.6mm)
-            translate([-15.0, 0.0, 12.0]) {
+            // Thumb Tab horizontal plate (sitting at z = 13.5, thickness 3.6mm, 1.5mm clearance gap)
+            translate([-15.0, 0.0, 13.5]) {
                 hull() {
                     cylinder(d = 10.0, h = 3.6, center = true, $fn = 50);
                     translate([-15.0, 0.0, 0.0])
