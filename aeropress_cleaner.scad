@@ -112,8 +112,8 @@ module assembly() {
     trigger_peg_x = trigger_pivot_x + 15.0 * cos(trigger_angle + 180.0);
     trigger_peg_y = trigger_pivot_y + 15.0 * sin(trigger_angle + 180.0);
     
-    stationary_peg_x = -95.0;
-    stationary_peg_y = 15.0;
+    stationary_peg_x = -65.0;
+    stationary_peg_y = 10.0;
     
     dx = trigger_peg_x - stationary_peg_x;
     dy = trigger_peg_y - stationary_peg_y;
@@ -203,17 +203,17 @@ module ring_body() {
             }
             
             // 4. Stationary Spring Post Bracket (extends from handle neck at z = -15 -> -12)
-            // Placed at [-95.0, 15.0] to align with trigger peg
+            // Placed at [-65.0, 10.0] to support horizontal compression spring
             translate([0, 0, -15.0]) {
                 hull() {
                     translate([-95.0, 0.0, 0.0])
                         cylinder(d = 20.0, h = 3.0, $fn = 50);
-                    translate([-95.0, 15.0, 0.0])
+                    translate([-65.0, 10.0, 0.0])
                         cylinder(d = 8.0, h = 3.0, $fn = 50);
                 }
             }
             // Vertical spring peg pointing up (starts at top of bracket z = -12.0, height 6.0)
-            translate([-95.0, 15.0, -12.0])
+            translate([-65.0, 10.0, -12.0])
                 cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
         }
 
@@ -273,9 +273,9 @@ module wiper_arm() {
             translate([0, 0, 2.0])
                 cylinder(d = 11.6, h = 3.6, center = true, $fn = 50);
                 
-            // Wiper Arm pointing along +X locally (length 65.0mm)
+            // Wiper Arm pointing along +X locally (length 63.0mm)
             translate([0, -2.5, 0.2])
-                cube([65.0, 5.0, 3.6]);
+                cube([63.0, 5.0, 3.6]);
                 
             // 9.0mm Pinion Gear Sector pointing along -X (180 degrees)
             // Teeth at local -90, -30, 30, 90 degrees relative to 180 (spans 180 degrees total)
@@ -289,7 +289,7 @@ module wiper_arm() {
             
         // Wiper Blade slot (width 1.5mm, depth 2.2mm, z = 1.8 -> 4.0)
         translate([8.0, -0.75, 1.8])
-            cube([57.0, 1.5, 2.2]);
+            cube([55.0, 1.5, 2.2]);
     }
 }
 
