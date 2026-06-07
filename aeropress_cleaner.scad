@@ -395,11 +395,27 @@ module gear_tooth(pitch_r, thickness) {
         ]);
 }
 
+module sector_cylinder(r, angle, h) {
+    // Generates a cylinder sector of radius r, height h, centered at origin
+    // Spans 'angle' degrees symmetrically around the +X axis (from -angle/2 to +angle/2)
+    linear_extrude(height = h, center = true)
+        polygon([
+            [0.0, 0.0],
+            [r * cos(-angle/2), r * sin(-angle/2)],
+            [r * cos(-angle/4), r * sin(-angle/4)],
+            [r, 0.0],
+            [r * cos(angle/4), r * sin(angle/4)],
+            [r * cos(angle/2), r * sin(angle/2)]
+        ]);
+}
+
 module gear_sector(pitch_r, num_teeth, tooth_angle_span, thickness) {
-    // Generates a sector of gear teeth centered at the origin
+    // Generates a wedge-shaped sector of gear teeth centered at the origin
     union() {
-        // Base backing sector cylinder
-        cylinder(r = pitch_r - 1.0, h = thickness, center = true, $fn = 50);
+        // Wedge backing sector
+        sector_angle = (num_teeth - 1) * tooth_angle_span + 30.0;
+        sector_cylinder(r = pitch_r - 1.0, angle = sector_angle, h = thickness);
+        
         // Spaced teeth
         for (i = [0 : num_teeth-1]) {
             angle = (i - (num_teeth-1)/2) * tooth_angle_span;
