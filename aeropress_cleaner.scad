@@ -236,7 +236,7 @@ module ring_body() {
             }
             
             // 5. Trigger lever riser slot cutout in top plate (z = 4.0 -> 12.1)
-            // Arc of radius 12mm, width 11mm (0.5mm clearance), spanning 60 -> 165 degrees from Pivot B [-60, 0]
+            // Arc of radius 12mm, width 11mm (0.5mm clearance), spanning 60 -> 180 degrees from Pivot B [-60, 0]
             translate([trigger_pivot_x, trigger_pivot_y, 3.9]) {
                 linear_extrude(height = 8.3) {
                     intersection() {
@@ -249,7 +249,7 @@ module ring_body() {
                             [25.0 * cos(60.0), 25.0 * sin(60.0)],
                             [0.0, 25.0],
                             [-25.0, 25.0],
-                            [25.0 * cos(165.0), 25.0 * sin(165.0)]
+                            [-25.0, 0.0]
                         ]);
                     }
                 }
