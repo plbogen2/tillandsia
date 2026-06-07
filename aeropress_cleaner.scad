@@ -30,7 +30,7 @@ screw_head_h = 2.5;
 // Handle and Spring peg positions
 stationary_handle_x = -115.0;
 stationary_handle_y = 0.0;
-spring_peg_d = 5.0; // fits inside 6mm ID spring
+spring_peg_d = 3.0; // fits inside 4mm ID spring
 
 // --- ANIMATION CONTROLS ---
 animate = false;
@@ -121,10 +121,10 @@ module assembly() {
     angle = atan2(dy, dx);
     
     color("red")
-        translate([stationary_peg_x, stationary_peg_y, 0.0])
+        translate([stationary_peg_x, stationary_peg_y, -1.5])
             rotate([0, 0, angle])
                 rotate([0, 90, 0])
-                    cylinder(d = 7.0, h = dist, $fn=20);
+                    cylinder(d = 5.0, h = dist, $fn=20);
 }
 
 module ring_body() {
@@ -241,8 +241,8 @@ module ring_body() {
                 linear_extrude(height = 8.3) {
                     intersection() {
                         difference() {
-                            circle(r = 12.0 + 5.5, $fn = 60);
-                            circle(r = 12.0 - 5.5, $fn = 60);
+                            circle(r = 12.0 + 8.0, $fn = 60);
+                            circle(r = 12.0 - 7.0, $fn = 60);
                         }
                         polygon([
                             [0.0, 0.0],
