@@ -108,12 +108,12 @@ module assembly() {
             mock_plunger();
     }
     
-    // 6. Mock Spring (Animated compression between pegs, global z = -6.2)
-    trigger_peg_x = trigger_pivot_x - 5.0 * cos(trigger_angle) + 35.0 * sin(trigger_angle);
-    trigger_peg_y = trigger_pivot_y - 5.0 * sin(trigger_angle) - 35.0 * cos(trigger_angle);
+    // 6. Mock Spring (Animated compression between pegs, global z = -4.2)
+    trigger_peg_x = trigger_pivot_x + 15.0 * cos(trigger_angle + 150.0);
+    trigger_peg_y = trigger_pivot_y + 15.0 * sin(trigger_angle + 150.0);
     
-    stationary_peg_x = -100.0;
-    stationary_peg_y = -35.0;
+    stationary_peg_x = -55.0;
+    stationary_peg_y = 35.0;
     
     dx = trigger_peg_x - stationary_peg_x;
     dy = trigger_peg_y - stationary_peg_y;
@@ -121,7 +121,7 @@ module assembly() {
     angle = atan2(dy, dx);
     
     color("silver")
-        translate([stationary_peg_x, stationary_peg_y, -6.2])
+        translate([stationary_peg_x, stationary_peg_y, -4.2])
             rotate([0, 0, angle])
                 rotate([0, 90, 0])
                     cylinder(d = 8.0, h = dist, $fn=20);
@@ -164,27 +164,50 @@ module ring_body() {
             
             // 2. Dual-Pivot Gearbox Casing (Upper Deck: z = 0 -> 20, Lower Deck: z = -12 -> -8)
             // Upper Deck casing (z = 0 -> 20)
-            translate([-71.0, -7.0, 0.0])
-                cube([42.4, 14.0, 20.0]);
-                
+            hull() {
+                translate([pivot_x, pivot_y, 0.0])
+                    cylinder(d = 12.0, h = 20.0, $fn = 50);
+                translate([trigger_pivot_x, trigger_pivot_y, 0.0])
+                    cylinder(d = 16.0, h = 20.0, $fn = 50);
+                translate([-(plunger_di/2 + wall_thickness - 1.0), 0, 0.0])
+                    cylinder(d = 8.0, h = 20.0, $fn = 50);
+            }
             // Lower Deck casing (z = -12 -> -8)
-            translate([-71.0, -7.0, -12.0])
-                cube([42.4, 14.0, 4.0]);
+            hull() {
+                translate([pivot_x, pivot_y, -12.0])
+                    cylinder(d = 12.0, h = 4.0, $fn = 50);
+                translate([trigger_pivot_x, trigger_pivot_y, -12.0])
+                    cylinder(d = 16.0, h = 4.0, $fn = 50);
+                translate([-(plunger_di/2 + wall_thickness - 1.0), 0, -12.0])
+                    cylinder(d = 8.0, h = 4.0, $fn = 50);
+            }
                 
-            // 3. Ice Cream Scoop C-Handle Shell (z = -60 -> 20)
-            // Encloses the trigger Pivot B and extends downwards to form the handle back wall
+            // 3. Stationary Handle Post (Cylindrical grip, z = -60 -> 20)
+            translate([-70.0, -25.0, -60.0])
+                cylinder(d = 22.0, h = 80.0, $fn = 60);
+                
+            // 4. Handle Connection Bridge (z = 0 -> 20)
             hull() {
                 translate([trigger_pivot_x, trigger_pivot_y, 0.0])
                     cylinder(d = 16.0, h = 20.0, $fn = 50);
-                translate([-108.0, -15.0, -60.0])
-                    cylinder(d = 16.0, h = 80.0, $fn = 50);
-                translate([-108.0, -55.0, -60.0])
-                    cylinder(d = 16.0, h = 80.0, $fn = 50);
+                translate([-70.0, -25.0, 0.0])
+                    cylinder(d = 22.0, h = 20.0, $fn = 50);
+                translate([-(plunger_di/2 + wall_thickness - 1.0), -15.0, 0.0])
+                    cylinder(d = 8.0, h = 20.0, $fn = 50);
             }
             
-            // 4. Stationary Spring Peg Bracket (bridges handle post to back of pocket at X = -100)
-            // This is just the horizontal peg pointing along +X (starts at back wall X = -100.0, global z = -6.2)
-            translate([-100.0, -35.0, -6.2]) rotate([0, 90, 0])
+            // 5. Stationary Spring Post Bracket (at clevis level z = -8 -> -4.4, thickness 3.6mm)
+            // Placed at [-55.0, 35.0] to align with trigger peg
+            translate([0, 0, -8.0]) {
+                hull() {
+                    translate([trigger_pivot_x, trigger_pivot_y, 0.0])
+                        cylinder(d = 16.0, h = 3.6, $fn = 50);
+                    translate([-55.0, 35.0, 0.0])
+                        cylinder(d = 10.0, h = 3.6, $fn = 50);
+                }
+            }
+            // Vertical spring peg pointing up (starts at top of bracket z = -4.4, height 6.0)
+            translate([-55.0, 35.0, -4.4])
                 cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
         }
 
@@ -226,15 +249,11 @@ module ring_body() {
             translate([trigger_pivot_x, trigger_pivot_y, -12.1])
                 cylinder(d = screw_head_d, h = screw_head_h + 0.1, $fn = 30);
                 
-            // 4. U-channel nesting cavity pocket for trigger lever and spring (z = -61 -> 21)
-            // Cuts a pocket from X = -100 to -68, and Y = -60 to -12, leaving X > -68 completely open to the right
-            translate([-100.0, -60.0, -61.0])
-                cube([32.0, 48.0, 82.0]);
-                
-            // 5. Clevis knuckle slot cutout for Pivot B trigger (z = -8.1 -> 0.1)
-            // Cuts from X = -85 to -60 to clear the moving trigger knuckle
-            translate([-85.0, -12.0, -8.1])
-                cube([25.0, 24.0, 8.2]);
+            // 4. Clevis knuckle slot cutout for Pivot B trigger (z = -8.1 -> 0.1)
+            // Cuts along the 150-degree trigger axis to clear knuckle rotation
+            translate([trigger_pivot_x, trigger_pivot_y, -8.1]) rotate([0, 0, 150])
+                translate([-20.0, -8.0, 0.0])
+                    cube([40.0, 16.0, 8.2]);
         }
     }
 }
@@ -269,29 +288,26 @@ module wiper_arm() {
 }
 
 module trigger_lever() {
-    // Geared moving trigger lever (local origin [0,0,0] is Pivot B)
-    // Gear sector faces along +X (0 degrees), lever post extends along -Y (-90 degrees)
+    // Geared moving thumb trigger lever (local origin [0,0,0] is Pivot B)
+    // Gear sector faces along -30 degrees, thumb tab extends along 150 degrees
     difference() {
         union() {
-            // Knuckle (middle pivot block: z = 0.2 -> 3.8)
-            translate([0, 0, 2.0])
-                cylinder(d = 14.0, h = 3.6, center = true, $fn = 50);
+            // Knuckle & Thumb Tab base
+            hull() {
+                translate([0, 0, 2.0])
+                    cylinder(d = 14.0, h = 3.6, center = true, $fn = 50);
+                translate([25.0 * cos(150), 25.0 * sin(150), 2.0])
+                    cylinder(d = 10.0, h = 3.6, center = true, $fn = 50);
+            }
                 
-            // 27.0mm Gear Sector pointing along +X (0 degrees)
-            // Teeth at local -40, -20, 0, 20, 40 degrees (pitch spacing 20 degrees)
-            translate([0, 0, 2.0]) rotate([0, 0, 0])
+            // 27.0mm Gear Sector pointing along -30 degrees (towards Pivot A)
+            // Teeth at local -70, -50, -30, -10, 10 degrees (pitch spacing 20 degrees, centered at -30)
+            translate([0, 0, 2.0]) rotate([0, 0, -30])
                 gear_sector(pitch_r = 27.0, num_teeth = 5, tooth_angle_span = 20.0, thickness = 3.6);
                 
-            // Squeeze Handle Lever extending down (length 60.0mm, z = 0.2 -> 3.8)
-            translate([-5.0, -60.0, 0.2])
-                cube([10.0, 60.0, 3.6]);
-                
-            // Trigger Finger Guard / Contoured Grip Tab at the bottom
-            translate([-10.0, -60.0, 0.2])
-                cube([20.0, 10.0, 3.6]);
-                
-            // Horizontal Spring Peg pointing along -X (towards back wall, centered at z=2.0)
-            translate([-5.0, -35.0, 2.0]) rotate([0, -90, 0])
+            // Vertical Spring Peg pointing up from top surface (z = 3.8)
+            // Placed at distance 15mm along the thumb tab axis (150 degrees)
+            translate([15.0 * cos(150), 15.0 * sin(150), 3.8])
                 cylinder(d = spring_peg_d, h = 6.0, $fn = 25);
         }
 
