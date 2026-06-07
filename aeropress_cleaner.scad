@@ -254,6 +254,17 @@ module ring_body() {
                     }
                 }
             }
+            
+            // 6. Spring clearance slot cutout in top plate (z = 3.9 -> 12.2)
+            // Prevents spring collision with the top plate corner and allows top-down installation
+            hull() {
+                translate([-85.0, 0.0, 3.9])
+                    cylinder(d = 9.0, h = 8.3, $fn = 30);
+                translate([-60.0, 12.0, 3.9])
+                    cylinder(d = 9.0, h = 8.3, $fn = 30);
+                translate([-68.48, 8.48, 3.9])
+                    cylinder(d = 9.0, h = 8.3, $fn = 30);
+            }
         }
     }
 }
