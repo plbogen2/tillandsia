@@ -85,7 +85,14 @@ jobs:
       - name: Create Release Archive
         if: steps.check-release.outputs.RELEASE == 'true'
         run: |
+          echo "=== Listing files ==="
+          ls -la
+          ls -la STLs/
+          ls -la Animation/
+          echo "=== Creating zip ==="
           zip release.zip STLs/*.stl *.scad Animation/*.gif
+          echo "=== Verifying zip ==="
+          unzip -l release.zip
 
       - name: Create GitHub Release
         if: steps.check-release.outputs.RELEASE == 'true'
