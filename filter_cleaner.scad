@@ -5,22 +5,27 @@
 // 3. Wiper Blades (Flexible, x2): Simple flat TPU sheets (55mm x 15mm x 1.5mm).
 
 // --- PART SELECTOR ---
-part = "all"; // [all: Visual Assembly, front: Front Half (Rigid), back: Back Half (Rigid), blade: TPU Wiper Blade (Flexible)]
+part = "all"; // [all: Visual Assembly, front: Front Half (Rigid), back: Back Half (Rigid), blade: Flex PLA Insert (Flexible)]
 
 // --- PARAMETERS ---
 filter_di = 62.0;       // Standard metal filter diameter
 filter_thickness = 0.3; // Metal filter thickness
 wall_thickness = 3.0;   // Outer wall shell thickness
 
-// Blade dimensions
-blade_w = 55.0;
-blade_h = 15.0;
-blade_t = 1.5;
-
-// Frame dimensions
+// Frame & Flex dimensions
 frame_w = filter_di + 2 * wall_thickness + 10.0; // 78mm total width
 frame_h = 30.0;                                  // 30mm vertical height
-frame_t = 7.0;                                   // 7mm thickness per half (14mm total)
+frame_t = 5.0;                                   // 5mm thick rigid backing plates
+flex_t = 2.0;                                    // 2mm thick flex PLA inserts
+
+// Dado (Filter Channel) dimensions
+dado_w = filter_di + 0.5; // 62.5mm width (0.5mm clearance)
+dado_d = 0.2;             // 0.2mm depth per side (0.4mm total channel gap)
+
+// Scraping Ridge dimensions
+ridge_w = 62.0; // 62mm wide (covers filter mesh area)
+ridge_h = 0.3;  // 0.3mm height above dado face (0.1mm interference per side)
+ridge_t = 2.0;  // 2.0mm vertical width of the ridge
 
 // M3 Screw spacing
 screw_x_offset = frame_w / 2 - 5.0; // 34mm from center (screws at x = -34 and +34)
@@ -45,35 +50,35 @@ if (part == "all") {
 } else if (part == "back") {
     back_half();
 } else if (part == "blade") {
-    wiper_blade();
+    flex_plate();
 }
 
 module assembly() {
     // 1. Front Half (Rigid, transparent in assembly to see inside)
     color([0.7, 0.7, 0.7, 0.5])
-        translate([0, -frame_t, 0])
+        translate([0, -flex_t, 0])
             front_half();
             
-    // 2. Back Half (Rigid, solid)
-    color("gray")
+    // 2. Front Flex Plate (Flex PLA, transparent blue)
+    color([0.0, 0.0, 1.0, 0.6])
         translate([0, 0, 0])
+            flex_plate();
+            
+    // 3. Back Flex Plate (Flex PLA, transparent blue, mirrored to face front)
+    color([0.0, 0.0, 1.0, 0.6])
+        mirror([0, 1, 0])
+            flex_plate();
+            
+    // 4. Back Half (Rigid, solid)
+    color("gray")
+        translate([0, flex_t, 0])
             back_half();
-            
-    // 3. Front Wiper Blade (TPU, Blue)
-    color("blue")
-        translate([-blade_w/2, -blade_t, 0.0])
-            wiper_blade();
-            
-    // 4. Back Wiper Blade (TPU, Blue, rotated to face front)
-    color("blue")
-        translate([blade_w/2, 0.0, 0.0])
-            rotate([0, 0, 180])
-                wiper_blade();
                 
     // 5. Mock M3 Screws (x4)
+    // Shaft heads are on the front surface (y = -flex_t - frame_t)
     for (x = [-screw_x_offset, screw_x_offset]) {
         for (z = [-screw_z_offset, screw_z_offset]) {
-            translate([x, -frame_t - 2.5, z])
+            translate([x, -flex_t - frame_t - 2.5, z])
                 rotate([90, 0, 0])
                     mock_m3_screw(len = 12.0);
         }
@@ -89,107 +94,88 @@ module assembly() {
 }
 
 module front_half() {
-    // Front half of the clamp frame.
-    // Local coordinate origin [0,0,0] is on the split plane (mating face).
-    // The half extends in the -Y direction.
+    // Simple flat front clamp plate.
+    // Local coordinate origin [0,0,0] is on the mating plane.
+    // Plate extends in the -Y direction from y = 0 to -frame_t.
     difference() {
         // Main block
         translate([-frame_w/2, -frame_t, -frame_h/2])
             cube([frame_w, frame_t, frame_h]);
             
-        // Cutouts
-        union() {
-            // 1. Filter Channel (recessed track, width 62.5, depth 0.5, full height)
-            translate([-(filter_di + 0.5)/2, -0.5, -frame_h/2 - 1.0])
-                cube([filter_di + 0.5, 0.6, frame_h + 2.0]);
-                
-            // 2. Wiper Pocket (holds the 55x15x1.5mm TPU sheet)
-            // Pocket spans x = -27.5 -> +27.5, y = -1.4 -> 0.0, z = 0.0 -> 15.0
-            translate([-blade_w/2 - 0.1, -1.4, 0.0])
-                cube([blade_w + 0.2, 1.5, blade_h + 0.1]);
-                
-            // 3. Blade Flex Opening (lets the blade tip flex into the channel below z=0)
-            // Opens from z = -5.0 to 0.0, width 51.0mm, depth 2.5mm
-            translate([-48.0/2, -2.5, -5.0])
-                cube([48.0, 3.0, 5.1]);
-                
-            // 4. M3 Screw Clearance Holes with Head Counterbores
-            for (x = [-screw_x_offset, screw_x_offset]) {
-                for (z = [-screw_z_offset, screw_z_offset]) {
-                    // Clearance shaft (D=3.3)
-                    translate([x, 1.0, z])
-                        rotate([90, 0, 0])
-                            cylinder(d = 3.3, h = frame_t + 2.0, $fn = 20);
-                    // Cap head recess (D=6.0, depth 3.0)
-                    translate([x, -frame_t - 0.1, z])
-                        rotate([90, 0, 0])
-                            cylinder(d = 6.0, h = 3.0, $fn = 20);
-                }
+        // M3 Screw Clearance Holes with Counterbores
+        for (x = [-screw_x_offset, screw_x_offset]) {
+            for (z = [-screw_z_offset, screw_z_offset]) {
+                // Shaft clearance (D=3.3)
+                translate([x, 1.0, z])
+                    rotate([90, 0, 0])
+                        cylinder(d = 3.3, h = frame_t + 2.0, $fn = 20);
+                // Counterbore recess (D=6.0, depth 3.0)
+                translate([x, -frame_t + 3.0, z])
+                    rotate([90, 0, 0])
+                        cylinder(d = 6.0, h = 4.1, $fn = 20);
             }
-            
-            // 5. Chamfered Entry Funnel (at the top, z = 12 -> 15) to guide filter in easily
-            translate([-(filter_di + 0.5)/2, -0.5, frame_h/2 - 3.0])
-                multmatrix([
-                    [1, 0, 0, 0],
-                    [0, 1, -1.0, 0], // sloped in Y
-                    [0, 0, 1, 0],
-                    [0, 0, 0, 1]
-                ])
-                cube([filter_di + 0.5, 3.0, 4.0]);
         }
     }
 }
 
 module back_half() {
-    // Back half of the clamp frame.
-    // Local coordinate origin [0,0,0] is on the split plane (mating face).
-    // The half extends in the +Y direction (mirrored copy of front half, but with tap holes).
+    // Simple flat back clamp plate.
+    // Local coordinate origin [0,0,0] is on the mating plane.
+    // Plate extends in the +Y direction from y = 0 to frame_t.
     difference() {
         // Main block
         translate([-frame_w/2, 0.0, -frame_h/2])
             cube([frame_w, frame_t, frame_h]);
             
-        // Cutouts
-        union() {
-            // 1. Filter Channel (recessed track, width 62.5, depth 0.5, full height)
-            translate([-(filter_di + 0.5)/2, -0.1, -frame_h/2 - 1.0])
-                cube([filter_di + 0.5, 0.6, frame_h + 2.0]);
-                
-            // 2. Wiper Pocket (holds the 55x15x1.5mm TPU sheet)
-            // Pocket spans x = -27.5 -> +27.5, y = 0.0 -> 1.4, z = 0.0 -> 15.0
-            translate([-blade_w/2 - 0.1, -0.1, 0.0])
-                cube([blade_w + 0.2, 1.5, blade_h + 0.1]);
-                
-            // 3. Blade Flex Opening
-            translate([-48.0/2, -0.5, -5.0])
-                cube([48.0, 3.0, 5.1]);
-                
-            // 4. M3 Screw Tap Holes (D=2.8, threads directly into plastic)
-            for (x = [-screw_x_offset, screw_x_offset]) {
-                for (z = [-screw_z_offset, screw_z_offset]) {
-                    translate([x, -1.0, z])
-                        rotate([90, 0, 0])
-                            cylinder(d = 2.8, h = frame_t + 2.0, $fn = 20);
-                }
+        // M3 Screw Tap Holes (D=2.8)
+        for (x = [-screw_x_offset, screw_x_offset]) {
+            for (z = [-screw_z_offset, screw_z_offset]) {
+                translate([x, -1.0, z])
+                    rotate([90, 0, 0])
+                        cylinder(d = 2.8, h = frame_t + 2.0, $fn = 20);
             }
-            
-            // 5. Chamfered Entry Funnel (at the top, z = 12 -> 15)
-            translate([-(filter_di + 0.5)/2, -2.5, frame_h/2 - 3.0])
-                multmatrix([
-                    [1, 0, 0, 0],
-                    [0, 1, 1.0, 0], // sloped in +Y
-                    [0, 0, 1, 0],
-                    [0, 0, 0, 1]
-                ])
-                cube([filter_di + 0.5, 3.0, 4.0]);
         }
     }
 }
 
-module wiper_blade() {
-    // Flat TPU sheet (55mm x 15mm x 1.5mm)
-    // Sits in the pocket. Bottom tip can flex slightly.
-    cube([blade_w, blade_t, blade_h]);
+module flex_plate() {
+    // Flexible clamping plate with integrated dado (channel) and scraping ridge.
+    // Local coordinate origin [0,0,0] is on the mating plane.
+    // Base plate extends in the -Y direction from y = 0 to -flex_t.
+    difference() {
+        union() {
+            // 1. Base plate with vertical channel and funnel cut out
+            difference() {
+                // Base block
+                translate([-frame_w/2, -flex_t, -frame_h/2])
+                    cube([frame_w, flex_t, frame_h]);
+                // Vertical Dado (channel)
+                translate([-dado_w/2, -dado_d - 0.05, -frame_h/2 - 1.0])
+                    cube([dado_w, dado_d + 0.1, frame_h + 2.0]);
+                // Entry Funnel
+                translate([-dado_w/2, 0, 0])
+                    rotate([0, 90, 0])
+                        linear_extrude(height = dado_w)
+                            polygon([
+                                [-dado_d, frame_h/2 - 3.0],
+                                [-flex_t - 0.1, frame_h/2 + 0.1],
+                                [-dado_d, frame_h/2 + 0.1]
+                            ]);
+            }
+            // 2. Scraping Ridge (added back on top of the channel surface)
+            // Starts at y = -dado_d, extends to y = ridge_h (0.1mm past split plane)
+            translate([-ridge_w/2, -dado_d, -ridge_t/2])
+                cube([ridge_w, dado_d + ridge_h, ridge_t]);
+        }
+        // 3. M3 Screw Clearance Holes (D=3.3)
+        for (x = [-screw_x_offset, screw_x_offset]) {
+            for (z = [-screw_z_offset, screw_z_offset]) {
+                translate([x, 1.0, z])
+                    rotate([90, 0, 0])
+                        cylinder(d = 3.3, h = flex_t + 2.0, $fn = 20);
+            }
+        }
+    }
 }
 
 module mock_m3_screw(len = 12.0) {
