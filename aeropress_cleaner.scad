@@ -28,7 +28,7 @@ screw_head_d = 6.0;    // recess for M3 socket head cap screw
 screw_head_h = 2.5;
 
 // Handle and Spring peg positions
-stationary_handle_x = -115.0;
+stationary_handle_x = -145.0;
 stationary_handle_y = 0.0;
 spring_peg_d = 3.0; // fits inside 4mm ID spring
 
@@ -230,8 +230,8 @@ module ring_body() {
                             circle(r = 15.0, $fn = 50);
                     }
                     // Extend pocket left to clear the trigger peg and spring
-                    translate([-100.0, -15.0])
-                        square([45.0, 30.0]);
+                    translate([-120.0, -15.0])
+                        square([65.0, 30.0]);
                 }
             }
             
