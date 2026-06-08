@@ -31,6 +31,10 @@ ridge_t = 2.0;  // 2.0mm vertical width of the ridge
 screw_x_offset = frame_w / 2 - 5.0; // 34mm from center (screws at x = -34 and +34)
 screw_z_offset = 10.0;              // screws at z = -10 and +10
 
+// M3 Square Nut dimensions (DIN 562)
+nut_pocket_w = 6.0; // 6.0mm flat-to-flat pocket width (5.5mm nut + 0.5mm tolerance)
+nut_pocket_d = 2.2; // 2.2mm pocket depth (1.8mm nut + 0.4mm tolerance)
+
 // --- ANIMATION CONTROLS ---
 animate = false;
 time_t = undef;
@@ -78,9 +82,9 @@ module assembly() {
     // Shaft heads are on the front surface (y = -flex_t - frame_t)
     for (x = [-screw_x_offset, screw_x_offset]) {
         for (z = [-screw_z_offset, screw_z_offset]) {
-            translate([x, -flex_t - frame_t - 2.5, z])
-                rotate([90, 0, 0])
-                    mock_m3_screw(len = 12.0);
+            translate([x, -flex_t - frame_t, z])
+                rotate([-90, 0, 0])
+                    mock_m3_screw(len = 14.0);
         }
     }
     
@@ -127,12 +131,16 @@ module back_half() {
         translate([-frame_w/2, 0.0, -frame_h/2])
             cube([frame_w, frame_t, frame_h]);
             
-        // M3 Screw Tap Holes (D=2.8)
+        // M3 Screw Clearance Holes (D=3.3) and Square Nut Pockets
         for (x = [-screw_x_offset, screw_x_offset]) {
             for (z = [-screw_z_offset, screw_z_offset]) {
+                // Clearance shaft
                 translate([x, frame_t + 1.0, z])
                     rotate([90, 0, 0])
-                        cylinder(d = 2.8, h = frame_t + 2.0, $fn = 20);
+                        cylinder(d = 3.3, h = frame_t + 2.0, $fn = 20);
+                // Square nut pocket on the rear face (y = frame_t)
+                translate([x - nut_pocket_w/2, frame_t - nut_pocket_d, z - nut_pocket_w/2])
+                    cube([nut_pocket_w, nut_pocket_d + 0.1, nut_pocket_w]);
             }
         }
     }
