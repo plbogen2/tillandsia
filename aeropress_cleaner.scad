@@ -158,15 +158,15 @@ module ring_body() {
                 }
             }
             
-            // 2. Straight Tuning-Fork Handle Casing (z = -12.0 -> 12.0, H = 24mm)
+            // 2. Straight Tuning-Fork Handle Casing (z = -15.0 -> 15.0, H = 30mm)
             // A simple straight flat bar running from Pivot A to the grip end.
             hull() {
                 translate([pivot_x, pivot_y, 0.0])
-                    cylinder(d = 20.0, h = 24.0, center = true, $fn = 50);
+                    cylinder(d = 20.0, h = 30.0, center = true, $fn = 50);
                 translate([trigger_pivot_x, trigger_pivot_y, 0.0])
-                    cylinder(d = 20.0, h = 24.0, center = true, $fn = 50);
+                    cylinder(d = 20.0, h = 30.0, center = true, $fn = 50);
                 translate([stationary_handle_x, 0.0, 0.0])
-                    cylinder(d = 20.0, h = 24.0, center = true, $fn = 50);
+                    cylinder(d = 20.0, h = 30.0, center = true, $fn = 50);
             }
             
             // 3. Stationary Spring Post (starts at bottom plate top surface z = -4.0, height 6.0)
@@ -199,25 +199,25 @@ module ring_body() {
                 
             // M3 Screw Pivot holes (Pivot A):
             // Head recess at bottom of handle plate:
-            translate([pivot_x, pivot_y, -12.1])
+            translate([pivot_x, pivot_y, -15.1])
                 cylinder(d = screw_head_d, h = screw_head_h + 0.1, $fn = 30);
             // Clearance hole through bottom plate & knuckle:
-            translate([pivot_x, pivot_y, -12.1])
-                cylinder(d = screw_clearance_d, h = 16.2, $fn = 30);
-            // Tap hole in top plate (z = 4.0 -> 12.0):
+            translate([pivot_x, pivot_y, -15.1])
+                cylinder(d = screw_clearance_d, h = 19.2, $fn = 30);
+            // Tap hole in top plate (z = 4.0 -> 15.0):
             translate([pivot_x, pivot_y, 4.0])
-                cylinder(d = screw_tap_d, h = 8.1, $fn = 30);
+                cylinder(d = screw_tap_d, h = 11.1, $fn = 30);
                 
             // M3 Screw Pivot holes (Pivot B - Trigger):
             // Head recess at bottom of handle plate:
-            translate([trigger_pivot_x, trigger_pivot_y, -12.1])
+            translate([trigger_pivot_x, trigger_pivot_y, -15.1])
                 cylinder(d = screw_head_d, h = screw_head_h + 0.1, $fn = 30);
             // Clearance hole through bottom plate & knuckle:
-            translate([trigger_pivot_x, trigger_pivot_y, -12.1])
-                cylinder(d = screw_clearance_d, h = 16.2, $fn = 30);
-            // Tap hole in top plate (z = 4.0 -> 12.0):
+            translate([trigger_pivot_x, trigger_pivot_y, -15.1])
+                cylinder(d = screw_clearance_d, h = 19.2, $fn = 30);
+            // Tap hole in top plate (z = 4.0 -> 15.0):
             translate([trigger_pivot_x, trigger_pivot_y, 4.0])
-                cylinder(d = screw_tap_d, h = 8.1, $fn = 30);
+                cylinder(d = screw_tap_d, h = 11.1, $fn = 30);
                 
             // 4. Internal Gear Pocket Cavity Cutout (z = -4.1 -> 4.1, height 8.2)
             // Houses both gear knuckles and the trigger lever swept path (open 30mm wide slot)
@@ -235,10 +235,10 @@ module ring_body() {
                 }
             }
             
-            // 5. Trigger lever riser slot cutout in top plate (z = 4.0 -> 12.1)
+            // 5. Trigger lever riser slot cutout in top plate (z = 4.0 -> 15.1)
             // Arc of radius 12mm, width 11mm (0.5mm clearance), spanning 60 -> 180 degrees from Pivot B [-60, 0]
             translate([trigger_pivot_x, trigger_pivot_y, 3.9]) {
-                linear_extrude(height = 8.3) {
+                linear_extrude(height = 11.2) {
                     intersection() {
                         difference() {
                             circle(r = 12.0 + 8.0, $fn = 60);
@@ -255,15 +255,15 @@ module ring_body() {
                 }
             }
             
-            // 6. Spring clearance slot cutout in top plate (z = 3.9 -> 12.2)
+            // 6. Spring clearance slot cutout in top plate (z = 3.9 -> 15.1)
             // Prevents spring collision with the top plate corner and allows top-down installation
             hull() {
                 translate([-85.0, 0.0, 3.9])
-                    cylinder(d = 9.0, h = 8.3, $fn = 30);
+                    cylinder(d = 9.0, h = 11.2, $fn = 30);
                 translate([-60.0, 12.0, 3.9])
-                    cylinder(d = 9.0, h = 8.3, $fn = 30);
+                    cylinder(d = 9.0, h = 11.2, $fn = 30);
                 translate([-68.48, 8.48, 3.9])
-                    cylinder(d = 9.0, h = 8.3, $fn = 30);
+                    cylinder(d = 9.0, h = 11.2, $fn = 30);
             }
         }
     }
@@ -290,9 +290,9 @@ module wiper_arm() {
         // Pin Hole (Clearance fit for M3 screw)
         cylinder(d = screw_clearance_d, h = 10.0, center = true, $fn = 30);
             
-        // Wiper Blade slot (width 1.5mm, depth 5.0mm, z = -1.8 -> 3.2)
-        translate([8.0, -0.75, -1.8])
-            cube([55.0, 1.5, 5.0]);
+        // Wiper Blade slot (dovetail)
+        translate([8.0, 0, 0])
+            dovetail_solid(55.1);
     }
 }
 
@@ -353,11 +353,12 @@ module wiper_blade() {
     // Shifted to start at local x = 8.0 to clear pivot knuckle.
     // Total length is 55.0mm.
     // Total height is 8.0mm (5.0mm in slot, 3.0mm sticking out).
-    translate([8.0, -0.75, -1.8]) {
-        // Base slot block
-        cube([55.0, 1.5, 5.0]);
+    translate([8.0, 0, 0]) {
+        // Base slot block (dovetail with clearance)
+        dovetail_blade_base(55.0, clearance);
         // Squeegee flap (3.0mm sticks out, total height 8.0mm, z = 3.2 -> 6.2)
-        translate([0, 0, 5.0])
+        // Centered in Y
+        translate([0, -0.5, 3.2])
             cube([55.0, 1.0, 3.0]);
     }
 }
@@ -435,5 +436,30 @@ module gear_sector(pitch_r, num_teeth, tooth_angle_span, thickness) {
                 gear_tooth(pitch_r, thickness);
         }
     }
+}
+
+// --- DOVETAIL HELPER MODULES ---
+module dovetail_solid(length) {
+    rotate([0, 90, 0])
+        linear_extrude(height = length)
+            polygon([
+                [1.8, -1.25],
+                [1.8, 1.25],
+                [-3.2, 0.75],
+                [-3.2, -0.75]
+            ]);
+}
+
+module dovetail_blade_base(length, clear = 0.0) {
+    w_top = 1.5 - clear;
+    w_bottom = 2.5 - clear;
+    rotate([0, 90, 0])
+        linear_extrude(height = length)
+            polygon([
+                [1.8, -w_bottom/2],
+                [1.8, w_bottom/2],
+                [-3.2, w_top/2],
+                [-3.2, -w_top/2]
+            ]);
 }
 
