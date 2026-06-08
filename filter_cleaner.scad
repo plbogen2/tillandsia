@@ -31,9 +31,9 @@ ridge_t = 2.0;  // 2.0mm vertical width of the ridge
 screw_x_offset = frame_w / 2 - 5.0; // 34mm from center (screws at x = -34 and +34)
 screw_z_offset = 10.0;              // screws at z = -10 and +10
 
-// M3 Square Nut dimensions (DIN 562)
-nut_pocket_w = 6.0; // 6.0mm flat-to-flat pocket width (5.5mm nut + 0.5mm tolerance)
-nut_pocket_d = 2.2; // 2.2mm pocket depth (1.8mm nut + 0.4mm tolerance)
+// M3 Hex Nut dimensions (DIN 934)
+hex_nut_w = 6.0; // 6.0mm flat-to-flat pocket width (5.5mm nut + 0.5mm tolerance)
+hex_nut_d = 3.0; // 3.0mm pocket depth (2.4mm nut + 0.6mm tolerance)
 
 // --- ANIMATION CONTROLS ---
 animate = false;
@@ -131,7 +131,7 @@ module back_half() {
         translate([-frame_w/2, 0.0, -frame_h/2])
             cube([frame_w, frame_t, frame_h]);
             
-        // M3 Screw Clearance Holes (D=3.3) and Captive Square Nut Slots
+        // M3 Screw Clearance Holes (D=3.3) and Hex Nut Pockets
         for (x = [-screw_x_offset, screw_x_offset]) {
             for (z = [-screw_z_offset, screw_z_offset]) {
                 // Clearance shaft
@@ -139,14 +139,11 @@ module back_half() {
                     rotate([90, 0, 0])
                         cylinder(d = 3.3, h = frame_t + 2.0, $fn = 20);
                 
-                // Captive slot pocket cut from the side edges
-                if (x < 0) {
-                    translate([-frame_w/2 - 0.1, (frame_t - nut_pocket_d)/2, z - nut_pocket_w/2])
-                        cube([frame_w/2 - screw_x_offset + nut_pocket_w/2 + 0.2, nut_pocket_d, nut_pocket_w]);
-                } else {
-                    translate([screw_x_offset - nut_pocket_w/2, (frame_t - nut_pocket_d)/2, z - nut_pocket_w/2])
-                        cube([frame_w/2 - screw_x_offset + nut_pocket_w/2 + 0.2, nut_pocket_d, nut_pocket_w]);
-                }
+                // Hex nut pocket (D=6.0 flat-to-flat, depth=3.0) cut from the rear face (y = frame_t)
+                translate([x, frame_t + 0.1, z])
+                    rotate([90, 0, 0])
+                        rotate([0, 0, 30])
+                            cylinder(d = hex_nut_w / cos(30), h = hex_nut_d + 0.2, $fn = 6);
             }
         }
     }
