@@ -20,11 +20,11 @@ flex_t = 2.0;                                    // 2mm thick flex PLA inserts
 
 // Dado (Filter Channel) dimensions
 dado_w = filter_di + 0.5; // 62.5mm width (0.5mm clearance)
-dado_d = 0.3;             // 0.3mm depth on one side (flat on the other)
+dado_d = 0.15;            // 0.15mm depth per side (0.3mm total channel gap)
 
 // Scraping Ridge dimensions
 ridge_w = 62.0; // 62mm wide (covers filter mesh area)
-ridge_h = 0.15; // 0.15mm protrusion from mating face (0.15mm interference per side)
+ridge_h = 0.15; // 0.15mm height above dado bottom (reaches split plane)
 ridge_t = 2.0;  // 2.0mm vertical width of the ridge
 
 // M3 Screw spacing
@@ -49,10 +49,8 @@ if (part == "all") {
     front_half();
 } else if (part == "back") {
     back_half();
-} else if (part == "blade_grooved") {
-    flex_plate_grooved();
-} else if (part == "blade_flat") {
-    flex_plate_flat();
+} else if (part == "blade") {
+    flex_plate();
 }
 
 module assembly() {
@@ -64,12 +62,12 @@ module assembly() {
     // 2. Front Flex Plate (Flex PLA, transparent blue, grooved)
     color([0.0, 0.0, 1.0, 0.6])
         translate([0, 0, 0])
-            flex_plate_grooved();
+            flex_plate();
             
-    // 3. Back Flex Plate (Flex PLA, transparent blue, flat plate, mirrored to face front)
+    // 3. Back Flex Plate (Flex PLA, transparent blue, mirrored to face front)
     color([0.0, 0.0, 1.0, 0.6])
         mirror([0, 1, 0])
-            flex_plate_flat();
+            flex_plate();
             
     // 4. Back Half (Rigid, solid)
     color("gray")
@@ -132,7 +130,7 @@ module back_half() {
         // M3 Screw Tap Holes (D=2.8)
         for (x = [-screw_x_offset, screw_x_offset]) {
             for (z = [-screw_z_offset, screw_z_offset]) {
-                translate([x, -1.0, z])
+                translate([x, frame_t + 1.0, z])
                     rotate([90, 0, 0])
                         cylinder(d = 2.8, h = frame_t + 2.0, $fn = 20);
             }
@@ -140,8 +138,8 @@ module back_half() {
     }
 }
 
-module flex_plate_grooved() {
-    // Flexible clamping plate with integrated dado (channel) and scraping ridge.
+module flex_plate() {
+    // Symmetric flexible clamping plate with dado (channel) and scraping ridge.
     // Local coordinate origin [0,0,0] is on the mating plane.
     // Base plate extends in the -Y direction from y = 0 to -flex_t.
     difference() {
@@ -151,7 +149,7 @@ module flex_plate_grooved() {
                 // Base block
                 translate([-frame_w/2, -flex_t, -frame_h/2])
                     cube([frame_w, flex_t, frame_h]);
-                // Vertical Dado (channel of depth dado_d = 0.3)
+                // Vertical Dado (channel of depth dado_d = 0.15)
                 translate([-dado_w/2, -dado_d - 0.05, -frame_h/2 - 1.0])
                     cube([dado_w, dado_d + 0.1, frame_h + 2.0]);
                 // Entry Funnel (slants the channel back to the plate rear face)
@@ -165,45 +163,8 @@ module flex_plate_grooved() {
                             ]);
             }
             // 2. Scraping Ridge (added back on top of the channel surface)
-            // Starts at y = -dado_d (-0.3), extends by ridge_h (0.15) to y = -0.15
+            // Starts at y = -dado_d (-0.15), extends by ridge_h (0.15) to y = 0.0 (mating plane)
             translate([-ridge_w/2, -dado_d, -ridge_t/2])
-                cube([ridge_w, ridge_h, ridge_t]);
-        }
-        // 3. M3 Screw Clearance Holes (D=3.3)
-        for (x = [-screw_x_offset, screw_x_offset]) {
-            for (z = [-screw_z_offset, screw_z_offset]) {
-                translate([x, 1.0, z])
-                    rotate([90, 0, 0])
-                        cylinder(d = 3.3, h = flex_t + 2.0, $fn = 20);
-            }
-        }
-    }
-}
-
-module flex_plate_flat() {
-    // Flexible clamping plate, flat mating face except for a protruding ridge and top funnel.
-    // Local coordinate origin [0,0,0] is on the mating plane.
-    // Base plate extends in the -Y direction from y = 0 to -flex_t.
-    difference() {
-        union() {
-            // 1. Base plate with entry funnel cutout (slants the flat face to the rear face)
-            difference() {
-                // Base block
-                translate([-frame_w/2, -flex_t, -frame_h/2])
-                    cube([frame_w, flex_t, frame_h]);
-                // Entry Funnel (slants from y = 0 back to y = -flex_t at the top)
-                translate([-dado_w/2, 0, 0])
-                    rotate([0, 90, 0])
-                        linear_extrude(height = dado_w)
-                            polygon([
-                                [0.0, frame_h/2 - 3.0],
-                                [-flex_t - 0.1, frame_h/2 + 0.1],
-                                [0.0, frame_h/2 + 0.1]
-                            ]);
-            }
-            // 2. Protruding Scraping Ridge (extends into +Y space past mating plane y = 0)
-            // Starts at y = 0, extends by ridge_h (0.15) to y = 0.15
-            translate([-ridge_w/2, 0.0, -ridge_t/2])
                 cube([ridge_w, ridge_h, ridge_t]);
         }
         // 3. M3 Screw Clearance Holes (D=3.3)
