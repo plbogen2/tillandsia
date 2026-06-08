@@ -49,8 +49,8 @@ dist_plunger=280
 
 # Filter Cleaner Project
 scad_filter="filter_cleaner.scad"
-parts_filter=("front" "back" "blade")
-filter_output_names=("filter_front" "filter_back" "filter_blade")
+parts_filter=("front" "back" "blade_grooved" "blade_flat")
+filter_output_names=("filter_front" "filter_back" "filter_blade_grooved" "filter_blade_flat")
 png_filter="filter_preview"
 cam_png_filter="0,0,0,55,0,45,280"
 gif_filter="filter_clean_anim"
