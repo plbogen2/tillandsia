@@ -263,8 +263,9 @@ module ring_body() {
         }
     }
     // 3. Stationary Spring Post (moved here to avoid being cut out by gear pocket)
-    translate([-85.0, 0.0, -4.1])
-        cylinder(d = spring_peg_d, h = 6.1, $fn = 25);
+    // Start it deeper in the floor (at -5.0) to ensure overlap and merge
+    translate([-85.0, 0.0, -5.0])
+        cylinder(d = spring_peg_d, h = 7.0, $fn = 25);
 }
 
 module wiper_arm() {
@@ -310,17 +311,17 @@ module trigger_lever() {
                     cylinder(d = 10.0, h = 3.6, center = true, $fn = 50);
             }
             
-            // Gooseneck Riser (hulls from trigger arm top z=3.6 to top deck z=13.0)
+            // Gooseneck Riser (hulls from trigger arm top z=3.6 to top deck z=16.0)
             hull() {
                 translate([-12.0, 0.0, 3.6])
                     cylinder(d = 10.0, h = 1.0, center = true, $fn = 50);
-                translate([-12.0, 0.0, 13.0])
+                translate([-12.0, 0.0, 16.0])
                     cylinder(d = 10.0, h = 1.0, center = true, $fn = 50);
             }
             
-            // Thumb Tab horizontal plate (sitting at z = 13.0, thickness 3.6mm, 1.0mm clearance gap)
-            // No center=true, so spans Z = 13.0 -> 16.6
-            translate([-12.0, 0.0, 13.0]) {
+            // Thumb Tab horizontal plate (sitting at z = 16.0, thickness 3.6mm, 1.0mm clearance gap)
+            // No center=true, so spans Z = 16.0 -> 19.6
+            translate([-12.0, 0.0, 16.0]) {
                 hull() {
                     cylinder(d = 10.0, h = 3.6, $fn = 50);
                     translate([-15.0, 0.0, 0.0])
@@ -354,10 +355,10 @@ module wiper_blade() {
     translate([8.0, 0, 0]) {
         // Base slot block (dovetail with clearance)
         dovetail_blade_base(55.0, clearance);
-        // Squeegee flap (3.0mm sticks out, total height 8.0mm, z = 3.2 -> 6.2)
-        // Centered in Y
-        translate([0, -0.5, 3.2])
-            cube([55.0, 1.0, 3.0]);
+        // Squeegee flap (3.0mm sticks out, total height 8.0mm, z = 3.1 -> 6.2)
+        // Centered in Y, with 0.1mm overlap at base
+        translate([0, -0.5, 3.1])
+            cube([55.0, 1.0, 3.1]);
     }
 }
 
