@@ -97,10 +97,12 @@ module assembly() {
     }
     
     // 4. M3 Metal Pivot Screws (Pivot A & B)
-    translate([pivot_x, pivot_y, -12.0])
-        mock_m3_screw(len = 24.0);
-    translate([trigger_pivot_x, trigger_pivot_y, -12.0])
-        mock_m3_screw(len = 24.0);
+    translate([pivot_x, pivot_y, 15.0])
+        rotate([180, 0, 0])
+            mock_m3_screw(len = 30.0);
+    translate([trigger_pivot_x, trigger_pivot_y, 15.0])
+        rotate([180, 0, 0])
+            mock_m3_screw(len = 30.0);
             
     // 5. Mock Plunger (Animated)
     if (animate || t_val > 0) {
@@ -193,25 +195,25 @@ module ring_body() {
             }
                 
             // M3 Screw Pivot holes (Pivot A):
-            // Head recess at bottom of handle plate:
-            translate([pivot_x, pivot_y, -15.1])
+            // Head recess at top of handle plate:
+            translate([pivot_x, pivot_y, 15.0 - screw_head_h])
                 cylinder(d = screw_head_d, h = screw_head_h + 0.1, $fn = 30);
             // Clearance hole through bottom plate, knuckle & top plate:
             translate([pivot_x, pivot_y, -15.1])
                 cylinder(d = screw_clearance_d, h = 30.2, $fn = 30);
-            // Hex nut recess at top of handle plate:
-            translate([pivot_x, pivot_y, 15.0 - 2.5])
+            // Hex nut recess at bottom of handle plate:
+            translate([pivot_x, pivot_y, -15.1])
                 cylinder(d = 6.2, h = 2.6, $fn = 6);
                 
             // M3 Screw Pivot holes (Pivot B - Trigger):
-            // Head recess at bottom of handle plate:
-            translate([trigger_pivot_x, trigger_pivot_y, -15.1])
+            // Head recess at top of handle plate:
+            translate([trigger_pivot_x, trigger_pivot_y, 15.0 - screw_head_h])
                 cylinder(d = screw_head_d, h = screw_head_h + 0.1, $fn = 30);
             // Clearance hole through bottom plate, knuckle & top plate:
             translate([trigger_pivot_x, trigger_pivot_y, -15.1])
                 cylinder(d = screw_clearance_d, h = 30.2, $fn = 30);
-            // Hex nut recess at top of handle plate:
-            translate([trigger_pivot_x, trigger_pivot_y, 15.0 - 2.5])
+            // Hex nut recess at bottom of handle plate:
+            translate([trigger_pivot_x, trigger_pivot_y, -15.1])
                 cylinder(d = 6.2, h = 2.6, $fn = 6);
                 
             // 4. Internal Gear Pocket Cavity Cutout (z = -4.1 -> 4.1, height 8.2)
