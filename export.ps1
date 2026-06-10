@@ -151,8 +151,8 @@ foreach ($proj in $projects) {
             $animateArg = "animate=true"
             $tArg = "time_t=$t_val"
             
-            # Slow 90-degree camera sweep
-            $cam_rot_z = 45 + ($i / $frameCount) * 90
+            # Slow 720-degree camera sweep (2 full rotations)
+            $cam_rot_z = 45 + ($i / $frameCount) * 720
             $cameraVal = "0,0,0,$($proj.GifPitch),0,$cam_rot_z,$($proj.GifCamDist)"
             if ($proj.ScadFile -eq "aeropress_cleaner.scad") {
                 # Center camera slightly higher for plunger
