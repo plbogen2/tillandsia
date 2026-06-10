@@ -29,14 +29,13 @@ jobs:
             echo "RELEASE=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Install OpenSCAD and ffmpeg
+      - name: Install OpenSCAD, MCAD, ffmpeg and Xvfb
         run: |
           sudo apt-get update
-          sudo apt-get install -y openscad openscad-mcad ffmpeg
+          sudo apt-get install -y openscad openscad-mcad ffmpeg xvfb
 
       - name: Run Export Script
-        shell: pwsh
-        run: ./export.ps1 -RenderPng -RenderGif
+        run: xvfb-run pwsh ./export.ps1 -RenderPng -RenderGif
 
       - name: Upload STLs as Artifacts
         uses: actions/upload-artifact@v4
