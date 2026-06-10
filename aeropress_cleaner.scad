@@ -278,8 +278,13 @@ module wiper_arm() {
     // Squeegee arm points along +X, gear sector faces along -X (180 degrees)
     difference() {
         union() {
-            // Knuckle (middle pivot block: z = -3.6 -> 3.6, height 7.2)
-            cylinder(d = 11.6, h = 7.2, center = true, $fn = 50);
+            // Knuckle (Split to avoid collision with trigger gear teeth)
+            // Top half (standard size, Z = 0.0 -> 3.6)
+            translate([0, 0, 0])
+                cylinder(d = 11.6, h = 3.6, $fn = 50);
+            // Bottom half (shrunk to gear root radius, Z = -3.6 -> 0.0)
+            translate([0, 0, -3.6])
+                cylinder(d = 6.26, h = 3.6, $fn = 50);
                 
             // Wiper Arm pointing along +X locally (length 63.0mm, thickness 3.6mm, z = -3.6 -> 0.0)
             translate([0, -2.5, -3.6])
