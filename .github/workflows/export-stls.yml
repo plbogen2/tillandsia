@@ -29,13 +29,19 @@ jobs:
             echo "RELEASE=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Install OpenSCAD, MCAD, ffmpeg and Xvfb
+      - name: Install OpenSCAD (Nightly) and ffmpeg
         run: |
+          wget -qO- https://files.openscad.org/OBS-Repository-Key.pub | sudo tee /etc/apt/trusted.gpg.d/obs-openscad-nightly.asc
+          echo "deb https://download.opensuse.org/repositories/home:/t-paul/xUbuntu_24.04/ ./" | sudo tee /etc/apt/sources.list.d/openscad.list
           sudo apt-get update
-          sudo apt-get install -y openscad openscad-mcad ffmpeg xvfb
+          sudo apt-get install -y openscad-nightly ffmpeg
+
+      - name: Create symlink for openscad
+        run: sudo ln -s /usr/bin/openscad-nightly /usr/local/bin/openscad
 
       - name: Run Export Script
-        run: xvfb-run pwsh ./export.ps1 -RenderPng -RenderGif
+        shell: pwsh
+        run: ./export.ps1 -RenderPng -RenderGif
 
       - name: Upload STLs as Artifacts
         uses: actions/upload-artifact@v4
