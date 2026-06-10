@@ -219,6 +219,14 @@ module ring_body() {
             translate([trigger_pivot_x, trigger_pivot_y, -15.1])
                 cylinder(d = 6.2, h = 2.6, $fn = 6);
                 
+            // M3 Screw hole for stationary spring peg (replaces printed peg)
+            // Thread hole d=2.8 through the floor (Z=-15 to 2.9, height 17.9)
+            translate([-85.0, 0.0, -15.1])
+                cylinder(d = 2.8, h = 18.0, $fn = 20);
+            // Counterbore for screw head (d=6.0, depth 3.0, Z=-15.1 to -11.9)
+            translate([-85.0, 0.0, -15.1])
+                cylinder(d = 6.0, h = 3.2, $fn = 30);
+                
             // 4. Internal Gear Pocket Cavity Cutout (z = -4.1 -> 4.1, height 8.2)
             // Houses both gear knuckles and the trigger lever swept path (open 30mm wide slot)
             translate([0, 0, -4.1]) {
@@ -267,10 +275,6 @@ module ring_body() {
             }
         }
     }
-    // 3. Stationary Spring Post (moved here to avoid being cut out by gear pocket)
-    // Start it deeper in the floor (at -5.0) to ensure overlap and merge
-    translate([-85.0, 0.0, -5.0])
-        cylinder(d = spring_peg_d, h = 7.0, $fn = 25);
 }
 
 module wiper_arm() {
