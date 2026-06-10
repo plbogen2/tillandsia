@@ -80,7 +80,7 @@ if [ "$RENDER_GIF" = true ]; then
     for i in {0..39}; do
         t_val=$(awk "BEGIN {print $i / 40}")
         frame_name=$(printf "frame_%04d.png" "$i")
-        cam_rot_z=$(awk "BEGIN {print 45 + ($i / 40) * 90}")
+        cam_rot_z=$(awk "BEGIN {print 45 + ($i / 40) * 720}")
         camera_val="0,0,30,$pitch_plunger,0,$cam_rot_z,$dist_plunger"
         
         openscad -o "$TEMP_DIR/$frame_name" -D "part=\"all\"" -D "animate=true" -D "time_t=$t_val" --imgsize 640,360 --camera "$camera_val" --colorscheme DeepOcean "$scad_plunger" > /dev/null 2>&1
@@ -115,7 +115,7 @@ if [ "$RENDER_GIF" = true ]; then
     for i in {0..39}; do
         t_val=$(awk "BEGIN {print $i / 40}")
         frame_name=$(printf "frame_%04d.png" "$i")
-        cam_rot_z=$(awk "BEGIN {print 45 + ($i / 40) * 90}")
+        cam_rot_z=$(awk "BEGIN {print 45 + ($i / 40) * 720}")
         camera_val="0,0,0,$pitch_filter,0,$cam_rot_z,$dist_filter"
         
         openscad -o "$TEMP_DIR/$frame_name" -D "part=\"all\"" -D "animate=true" -D "time_t=$t_val" --imgsize 640,360 --camera "$camera_val" --colorscheme DeepOcean "$scad_filter" > /dev/null 2>&1

@@ -4,6 +4,8 @@
 // 2. Wiper Arm (Rigid): Long pivoted lever (65mm) that completely crosses the plunger.
 // 3. Wiper Blade (Flexible): 57mm TPU blade pointing upwards, starts 8mm from pivot.
 
+use <MCAD/involute_gears.scad>
+
 // --- PART SELECTOR ---
 part = "all"; // [all: Visual Assembly, ring: Ring Body (Rigid), wiper: Wiper Arm (Rigid), trigger: Trigger Lever (Rigid), blade: Wiper Blade (Flexible)]
 
@@ -31,6 +33,7 @@ screw_head_h = 2.5;
 stationary_handle_x = -145.0;
 stationary_handle_y = 0.0;
 spring_peg_d = 3.0; // fits inside 4mm ID spring
+handle_roundover = 2.0; // radius of roundover on handle edges
 
 // --- ANIMATION CONTROLS ---
 animate = false;
@@ -164,11 +167,11 @@ module ring_body() {
             // A simple straight flat bar running from Pivot A to the grip end.
             hull() {
                 translate([pivot_x, pivot_y, 0.0])
-                    cylinder(d = 20.0, h = 30.0, center = true, $fn = 50);
+                    rounded_cylinder(d = 20.0, h = 30.0, r = handle_roundover, center = true);
                 translate([trigger_pivot_x, trigger_pivot_y, 0.0])
-                    cylinder(d = 20.0, h = 30.0, center = true, $fn = 50);
+                    rounded_cylinder(d = 20.0, h = 30.0, r = handle_roundover, center = true);
                 translate([stationary_handle_x, 0.0, 0.0])
-                    cylinder(d = 20.0, h = 30.0, center = true, $fn = 50);
+                    rounded_cylinder(d = 20.0, h = 30.0, r = handle_roundover, center = true);
             }
         }
 
@@ -278,21 +281,28 @@ module wiper_arm() {
             // Knuckle (middle pivot block: z = -3.6 -> 3.6, height 7.2)
             cylinder(d = 11.6, h = 7.2, center = true, $fn = 50);
                 
-            // Wiper Arm pointing along +X locally (length 63.0mm, thickness 3.6mm, z = -1.8 -> 1.8)
-            translate([0, -2.5, -1.8])
+            // Wiper Arm pointing along +X locally (length 63.0mm, thickness 3.6mm, z = -3.6 -> 0.0)
+            translate([0, -2.5, -3.6])
                 cube([63.0, 5.0, 3.6]);
                 
-            // 5.0mm Pinion Gear Sector centered at Z=0 (thickness 3.6mm, z = -1.8 -> 1.8)
-            // Teeth at local -90, -30, 30, 90 degrees relative to 180 (spans 180 degrees total)
-            rotate([0, 0, 180])
-                gear_sector(pitch_r = 5.0, num_teeth = 4, tooth_angle_span = 60.0, thickness = 3.6);
+            // 5.0mm Pinion Gear Sector centered at Z=-1.8 (thickness 3.6mm, z = -3.6 -> 0.0)
+            // Uses MCAD involute gear library for smoother meshing.
+            translate([0, 0, -1.8])
+                rotate([0, 0, 180])
+                    involute_gear_sector(
+                        pitch_r = 5.0,
+                        full_teeth = 6,
+                        sector_angle = 240,
+                        gear_rotation = 30,
+                        thickness = 3.6
+                    );
         }
 
         // Pin Hole (Clearance fit for M3 screw)
         cylinder(d = screw_clearance_d, h = 10.0, center = true, $fn = 30);
             
         // Wiper Blade slot (dovetail)
-        translate([8.0, 0, 0])
+        translate([8.0, 0, -1.8])
             dovetail_solid(55.1);
     }
 }
@@ -331,10 +341,17 @@ module trigger_lever() {
                 }
             }
                 
-            // 20.0mm Gear Sector centered at Z=0 (thickness 3.6mm, z = -1.8 -> 1.8)
-            // Teeth at local 37.5, 52.5, 67.5, 82.5, 97.5 degrees (pitch spacing 15 degrees)
-            rotate([0, 0, 67.5])
-                gear_sector(pitch_r = 20.0, num_teeth = 5, tooth_angle_span = 15.0, thickness = 3.6);
+            // 20.0mm Gear Sector centered at Z=-1.8 (thickness 3.6mm, z = -3.6 -> 0.0)
+            // Uses MCAD involute gear library for smoother meshing.
+            translate([0, 0, -1.8])
+                rotate([0, 0, 67.5])
+                    involute_gear_sector(
+                        pitch_r = 20.0,
+                        full_teeth = 24,
+                        sector_angle = 75,
+                        gear_rotation = 0,
+                        thickness = 3.6
+                    );
                 
             // Vertical Spring Peg pointing DOWN from trigger arm bottom surface (z = 0.0 -> -3.0)
             // Placed at distance 12mm along the thumb tab axis (180 degrees)
@@ -354,7 +371,8 @@ module wiper_blade() {
     // Shifted to start at local x = 8.0 to clear pivot knuckle.
     // Total length is 55.0mm.
     // Total height is 8.0mm (5.0mm in slot, 3.0mm sticking out).
-    translate([8.0, 0, 0]) {
+    // Shifted down by 1.8mm to match the new wiper arm slot position.
+    translate([8.0, 0, -1.8]) {
         // Base slot block (dovetail with clearance)
         dovetail_blade_base(55.0, clearance);
         // Squeegee flap (3.0mm sticks out, total height 8.0mm, z = 3.1 -> 6.2)
@@ -397,18 +415,6 @@ module mock_plunger() {
 }
 
 // --- GEAR HELPER MODULES ---
-module gear_tooth(pitch_r, thickness) {
-    // Generates a single robust trapezoidal tooth along +X
-    // Extruded height matches the knuckle slots
-    linear_extrude(height = thickness, center = true)
-        polygon([
-            [pitch_r - 1.5, 2.0],
-            [pitch_r + 1.5, 1.0],
-            [pitch_r + 1.5, -1.0],
-            [pitch_r - 1.5, -2.0]
-        ]);
-}
-
 module sector_cylinder(r, angle, h) {
     // Generates a cylinder sector of radius r, height h, centered at origin
     // Spans 'angle' degrees symmetrically around the +X axis (from -angle/2 to +angle/2)
@@ -423,19 +429,33 @@ module sector_cylinder(r, angle, h) {
         ]);
 }
 
-module gear_sector(pitch_r, num_teeth, tooth_angle_span, thickness) {
-    // Generates a wedge-shaped sector of gear teeth centered at the origin
-    union() {
-        // Wedge backing sector
-        sector_angle = (num_teeth - 1) * tooth_angle_span + 30.0;
-        sector_cylinder(r = pitch_r - 1.0, angle = sector_angle, h = thickness);
-        
-        // Spaced teeth
-        for (i = [0 : num_teeth-1]) {
-            angle = (i - (num_teeth-1)/2) * tooth_angle_span;
-            rotate([0, 0, angle])
-                gear_tooth(pitch_r, thickness);
-        }
+module involute_gear_sector(pitch_r, full_teeth, sector_angle, gear_rotation, thickness) {
+    // Generates a gear sector using MCAD involute gear library
+    // pitch_r: pitch radius of the gear
+    // full_teeth: number of teeth in the full gear
+    // sector_angle: angle of the sector to keep
+    // gear_rotation: rotation of the gear before cutting (to align teeth)
+    // thickness: gear thickness
+    cp = pitch_r * 360 / full_teeth;
+    outer_r = pitch_r * (1 + 2.0 / full_teeth) + 1.0; // add 1mm safety margin
+    
+    intersection() {
+        rotate([0, 0, gear_rotation])
+            translate([0, 0, -thickness/2])
+                gear(
+                    number_of_teeth = full_teeth,
+                    circular_pitch = cp,
+                    pressure_angle = 20,
+                    clearance = 0.2,
+                    gear_thickness = thickness,
+                    rim_thickness = thickness,
+                    rim_width = 0,
+                    hub_thickness = thickness,
+                    hub_diameter = 0,
+                    bore_diameter = 0,
+                    circles = 0
+                );
+        sector_cylinder(r = outer_r, angle = sector_angle, h = thickness + 0.1);
     }
 }
 
@@ -462,5 +482,34 @@ module dovetail_blade_base(length, clear = 0.0) {
                 [-3.2, w_top/2],
                 [-3.2, -w_top/2]
             ]);
+}
+
+module rounded_cylinder(d, h, r, center = true) {
+    // Generates a cylinder with rounded top and bottom edges
+    // d: diameter
+    // h: height
+    // r: roundover radius
+    limit_r = min(r, d/2 - 0.1, h/2 - 0.1);
+    
+    z_shift = center ? 0 : h/2;
+    
+    translate([0, 0, z_shift]) {
+        hull() {
+            // Internal core cylinder
+            cylinder(d = d - 2 * limit_r, h = h, center = true, $fn = 50);
+            
+            // Top rounding ring
+            translate([0, 0, h/2 - limit_r])
+                rotate_extrude($fn = 50)
+                    translate([d/2 - limit_r, 0, 0])
+                        circle(r = limit_r, $fn = 25);
+                        
+            // Bottom rounding ring
+            translate([0, 0, -h/2 + limit_r])
+                rotate_extrude($fn = 50)
+                    translate([d/2 - limit_r, 0, 0])
+                        circle(r = limit_r, $fn = 25);
+        }
+    }
 }
 
