@@ -105,7 +105,7 @@ foreach ($proj in $projects) {
         }
     }
     
-    # B. Render PNG Preview
+    # B. Render PNG Preview and Part PNGs
     if ($RenderPng) {
         $pngFile = "$pngDir/$($proj.PngName).png"
         Write-Host "  Rendering Preview PNG -> $pngFile" -ForegroundColor Yellow
@@ -124,10 +124,36 @@ foreach ($proj in $projects) {
         
         & $osPath $pngArgs | Out-Null
         
-        if (Test-Path $pngFile) {
+        if ((Test-Path $pngFile) -and (Get-Item $pngFile).Length -gt 0) {
             Write-Host "    [PNG] Success" -ForegroundColor Green
         } else {
             Write-Host "    [PNG] Failed" -ForegroundColor Red
+        }
+        
+        # Render individual parts
+        foreach ($part in $proj.Parts) {
+            $partPngFile = "$pngDir/$($part.StlName).png"
+            Write-Host "  Rendering part PNG -> $partPngFile" -ForegroundColor Yellow
+            
+            if (Test-Path $partPngFile) { Remove-Item $partPngFile }
+            
+            $partArg = "part=${dq}$($part.Name)${dq}"
+            $partPngArgs = @(
+                "-o", $partPngFile,
+                "-D", $partArg,
+                "--imgsize", "1280,720",
+                "--camera", $proj.PngCamera,
+                "--colorscheme", "DeepOcean",
+                $proj.ScadFile
+            )
+            
+            & $osPath $partPngArgs | Out-Null
+            
+            if ((Test-Path $partPngFile) -and (Get-Item $partPngFile).Length -gt 0) {
+                Write-Host "    [Part PNG] Success" -ForegroundColor Green
+            } else {
+                Write-Host "    [Part PNG] Failed" -ForegroundColor Red
+            }
         }
     }
     

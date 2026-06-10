@@ -69,7 +69,15 @@ done
 if [ "$RENDER_PNG" = true ]; then
     echo "  Rendering Preview PNG -> $PNG_DIR/$png_plunger.png"
     rm -f "$PNG_DIR/$png_plunger.png"
-    openscad -o "$PNG_DIR/$png_plunger.png" -D "part=\"all\"" --imgsize 1280,720 --camera "$cam_png_plunger" --colorscheme DeepOcean "$scad_plunger"
+    openscad -o "$PNG_DIR/$png_plunger.png" -D "part=\"all\"" --imgsize 1280,720 --camera "$cam_png_plunger" --colorscheme DeepOcean "$scad_plunger" > /dev/null 2>&1
+    
+    # Render individual parts
+    for part in "${parts_plunger[@]}"; do
+        png_name="$part"
+        echo "  Rendering part PNG -> $PNG_DIR/${png_name}.png"
+        rm -f "$PNG_DIR/${png_name}.png"
+        openscad -o "$PNG_DIR/${png_name}.png" -D "part=\"$part\"" --imgsize 1280,720 --camera "$cam_png_plunger" --colorscheme DeepOcean "$scad_plunger" > /dev/null 2>&1
+    done
 fi
 
 # 3. RENDER PLUNGER GIF
@@ -104,7 +112,19 @@ done
 if [ "$RENDER_PNG" = true ]; then
     echo "  Rendering Preview PNG -> $PNG_DIR/$png_filter.png"
     rm -f "$PNG_DIR/$png_filter.png"
-    openscad -o "$PNG_DIR/$png_filter.png" -D "part=\"all\"" --imgsize 1280,720 --camera "$cam_png_filter" --colorscheme DeepOcean "$scad_filter"
+    openscad -o "$PNG_DIR/$png_filter.png" -D "part=\"all\"" --imgsize 1280,720 --camera "$cam_png_filter" --colorscheme DeepOcean "$scad_filter" > /dev/null 2>&1
+    
+    # Render individual parts
+    for part in "${parts_filter[@]}"; do
+        case "$part" in
+            "front") png_name="filter_front" ;;
+            "back") png_name="filter_back" ;;
+            "blade") png_name="filter_blade" ;;
+        esac
+        echo "  Rendering part PNG -> $PNG_DIR/${png_name}.png"
+        rm -f "$PNG_DIR/${png_name}.png"
+        openscad -o "$PNG_DIR/${png_name}.png" -D "part=\"$part\"" --imgsize 1280,720 --camera "$cam_png_filter" --colorscheme DeepOcean "$scad_filter" > /dev/null 2>&1
+    done
 fi
 
 # 6. RENDER FILTER GIF
