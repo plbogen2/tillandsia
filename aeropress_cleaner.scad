@@ -436,7 +436,7 @@ module involute_gear_sector(pitch_r, full_teeth, sector_angle, gear_rotation, th
     // sector_angle: angle of the sector to keep
     // gear_rotation: rotation of the gear before cutting (to align teeth)
     // thickness: gear thickness
-    cp = pitch_r * 360 / full_teeth;
+    cp = pitch_r * 2 * PI / full_teeth;
     outer_r = pitch_r * (1 + 2.0 / full_teeth) + 1.0; // add 1mm safety margin
     
     intersection() {
