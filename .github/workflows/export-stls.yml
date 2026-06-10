@@ -32,7 +32,7 @@ jobs:
       - name: Install OpenSCAD and ffmpeg
         run: |
           sudo apt-get update
-          sudo apt-get install -y openscad ffmpeg
+          sudo apt-get install -y openscad openscad-mcad ffmpeg
 
       - name: Run Export Script
         shell: pwsh
