@@ -221,7 +221,6 @@ module ring_body() {
                 
             // 4. Internal Gear Pocket Cavity Cutout (z = -4.1 -> 4.1, height 8.2)
             // Houses both gear knuckles and the trigger lever swept path (open 30mm wide slot)
-            // Main gear pocket (Z = -4.1 -> 4.1, height 8.2)
             translate([0, 0, -4.1]) {
                 linear_extrude(height = 8.2) {
                     hull() {
@@ -230,12 +229,7 @@ module ring_body() {
                         translate([trigger_pivot_x, trigger_pivot_y])
                             circle(r = 15.0, $fn = 50);
                     }
-                }
-            }
-            // Deepened spring pocket extension (Z = -7.1 -> 4.1, height 11.2)
-            // Clears the trigger peg pointing down and the spring
-            translate([0, 0, -7.1]) {
-                linear_extrude(height = 11.2) {
+                    // Extend pocket left to clear the trigger peg and spring
                     translate([-120.0, -15.0])
                         square([65.0, 30.0]);
                 }
@@ -275,8 +269,8 @@ module ring_body() {
     }
     // 3. Stationary Spring Post (moved here to avoid being cut out by gear pocket)
     // Start it deeper in the floor (at -5.0) to ensure overlap and merge
-    translate([-85.0, 0.0, -8.0])
-        cylinder(d = spring_peg_d, h = 10.0, $fn = 25);
+    translate([-85.0, 0.0, -5.0])
+        cylinder(d = spring_peg_d, h = 7.0, $fn = 25);
 }
 
 module wiper_arm() {
@@ -328,19 +322,20 @@ module trigger_lever() {
             
             // Offset trigger arm inside upper half of the slot (H = 3.6mm, z = 0.0 -> 3.6)
             hull() {
-                translate([0, 0, -1.8])
+                translate([0, 0, 1.8])
                     cylinder(d = 14.0, h = 3.6, center = true, $fn = 50);
-                translate([-11.8, 0.0, -1.8])
+                translate([-12.0, 0.0, 1.8])
                     cylinder(d = 10.0, h = 3.6, center = true, $fn = 50);
             }
             
             // Riser (vertical cylinder, Z = -0.1 -> 16.1 for overlap)
-            translate([-11.8, 0.0, -0.1])
-                cylinder(d = 10.0, h = 16.2, $fn = 50);
+            // Riser (vertical cylinder, Z = 3.5 -> 16.2 for overlap)
+            translate([-12.0, 0.0, 3.5])
+                cylinder(d = 10.0, h = 12.7, $fn = 50);
             
             // Thumb Tab horizontal plate (sitting at z = 16.0, thickness 3.6mm, 1.0mm clearance gap)
             // No center=true, so spans Z = 16.0 -> 19.6
-            translate([-11.8, 0.0, 16.0]) {
+            translate([-12.0, 0.0, 16.0]) {
                 hull() {
                     cylinder(d = 10.0, h = 3.6, $fn = 50);
                     translate([-15.0, 0.0, 0.0])
@@ -360,11 +355,11 @@ module trigger_lever() {
                         thickness = 3.6
                     );
                 
-            // Vertical Spring Peg pointing DOWN from trigger arm bottom surface (z = -3.6 -> -6.6)
+            // Vertical Spring Peg pointing DOWN from trigger arm bottom surface (z = 0.0 -> -3.0)
             // Placed at distance 12mm along the thumb tab axis (180 degrees)
-            translate([-11.8, 0.0, -3.5])
+            translate([-12.0, 0.0, 0.0])
                 mirror([0, 0, 1])
-                    cylinder(d = spring_peg_d, h = 3.1, $fn = 25);
+                    cylinder(d = spring_peg_d, h = 3.0, $fn = 25);
         }
 
         // Pin Hole (Clearance fit for M3 screw)
