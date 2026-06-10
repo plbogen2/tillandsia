@@ -221,6 +221,7 @@ module ring_body() {
                 
             // 4. Internal Gear Pocket Cavity Cutout (z = -4.1 -> 4.1, height 8.2)
             // Houses both gear knuckles and the trigger lever swept path (open 30mm wide slot)
+            // Main gear pocket (Z = -4.1 -> 4.1, height 8.2)
             translate([0, 0, -4.1]) {
                 linear_extrude(height = 8.2) {
                     hull() {
@@ -229,7 +230,12 @@ module ring_body() {
                         translate([trigger_pivot_x, trigger_pivot_y])
                             circle(r = 15.0, $fn = 50);
                     }
-                    // Extend pocket left to clear the trigger peg and spring
+                }
+            }
+            // Deepened spring pocket extension (Z = -7.1 -> 4.1, height 11.2)
+            // Clears the trigger peg pointing down and the spring
+            translate([0, 0, -7.1]) {
+                linear_extrude(height = 11.2) {
                     translate([-120.0, -15.0])
                         square([65.0, 30.0]);
                 }
@@ -269,8 +275,8 @@ module ring_body() {
     }
     // 3. Stationary Spring Post (moved here to avoid being cut out by gear pocket)
     // Start it deeper in the floor (at -5.0) to ensure overlap and merge
-    translate([-85.0, 0.0, -5.0])
-        cylinder(d = spring_peg_d, h = 7.0, $fn = 25);
+    translate([-85.0, 0.0, -8.0])
+        cylinder(d = spring_peg_d, h = 10.0, $fn = 25);
 }
 
 module wiper_arm() {
@@ -322,23 +328,19 @@ module trigger_lever() {
             
             // Offset trigger arm inside upper half of the slot (H = 3.6mm, z = 0.0 -> 3.6)
             hull() {
-                translate([0, 0, 1.8])
+                translate([0, 0, -1.8])
                     cylinder(d = 14.0, h = 3.6, center = true, $fn = 50);
-                translate([-12.0, 0.0, 1.8])
+                translate([-11.8, 0.0, -1.8])
                     cylinder(d = 10.0, h = 3.6, center = true, $fn = 50);
             }
             
-            // Gooseneck Riser (hulls from trigger arm top z=3.6 to top deck z=16.0)
-            hull() {
-                translate([-12.0, 0.0, 3.6])
-                    cylinder(d = 10.0, h = 1.0, center = true, $fn = 50);
-                translate([-12.0, 0.0, 16.0])
-                    cylinder(d = 10.0, h = 1.0, center = true, $fn = 50);
-            }
+            // Riser (vertical cylinder, Z = -0.1 -> 16.1 for overlap)
+            translate([-11.8, 0.0, -0.1])
+                cylinder(d = 10.0, h = 16.2, $fn = 50);
             
             // Thumb Tab horizontal plate (sitting at z = 16.0, thickness 3.6mm, 1.0mm clearance gap)
             // No center=true, so spans Z = 16.0 -> 19.6
-            translate([-12.0, 0.0, 16.0]) {
+            translate([-11.8, 0.0, 16.0]) {
                 hull() {
                     cylinder(d = 10.0, h = 3.6, $fn = 50);
                     translate([-15.0, 0.0, 0.0])
@@ -353,16 +355,16 @@ module trigger_lever() {
                     involute_gear_sector(
                         pitch_r = 20.0,
                         full_teeth = 24,
-                        sector_angle = 75,
+                        sector_angle = 60,
                         gear_rotation = 0,
                         thickness = 3.6
                     );
                 
-            // Vertical Spring Peg pointing DOWN from trigger arm bottom surface (z = 0.0 -> -3.0)
+            // Vertical Spring Peg pointing DOWN from trigger arm bottom surface (z = -3.6 -> -6.6)
             // Placed at distance 12mm along the thumb tab axis (180 degrees)
-            translate([-12.0, 0.0, 0.0])
+            translate([-11.8, 0.0, -3.5])
                 mirror([0, 0, 1])
-                    cylinder(d = spring_peg_d, h = 3.0, $fn = 25);
+                    cylinder(d = spring_peg_d, h = 3.1, $fn = 25);
         }
 
         // Pin Hole (Clearance fit for M3 screw)
@@ -382,7 +384,7 @@ module wiper_blade() {
         dovetail_blade_base(55.0, clearance);
         // Squeegee flap (3.0mm sticks out, total height 8.0mm, z = 3.1 -> 6.2)
         // Centered in Y, with 0.1mm overlap at base
-        translate([0, -0.5, 3.1])
+        translate([0, -0.5, 1.7])
             cube([55.0, 1.0, 3.1]);
     }
 }
@@ -471,8 +473,8 @@ module dovetail_solid(length) {
             polygon([
                 [1.8, -1.25],
                 [1.8, 1.25],
-                [-3.2, 0.75],
-                [-3.2, -0.75]
+                [-1.8, 0.75],
+                [-1.8, -0.75]
             ]);
 }
 
@@ -484,8 +486,8 @@ module dovetail_blade_base(length, clear = 0.0) {
             polygon([
                 [1.8, -w_bottom/2],
                 [1.8, w_bottom/2],
-                [-3.2, w_top/2],
-                [-3.2, -w_top/2]
+                [-1.8, w_top/2],
+                [-1.8, -w_top/2]
             ]);
 }
 
