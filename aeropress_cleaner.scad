@@ -10,7 +10,7 @@ use <MCAD/involute_gears.scad>
 part = "all"; // [all: Visual Assembly, ring: Ring Body (Rigid), wiper: Wiper Arm (Rigid), trigger: Trigger Lever (Rigid), blade: Wiper Blade (Flexible)]
 
 // --- CUSTOMIZABLE PARAMETERS ---
-plunger_di = 57.2;
+plunger_di = 58.0;
 plunger_dome_h = 3.5;
 right_handed = false; // Set to true for right-handed version, false for left-handed
 
@@ -354,7 +354,7 @@ module trigger_lever() {
                     involute_gear_sector(
                         pitch_r = 20.0,
                         full_teeth = 24,
-                        sector_angle = 60,
+                        sector_angle = 75,
                         gear_rotation = 0,
                         thickness = 3.6
                     );
