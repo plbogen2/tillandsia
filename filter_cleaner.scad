@@ -13,10 +13,11 @@ filter_thickness = 0.3; // Metal filter thickness
 wall_thickness = 3.0;   // Outer wall shell thickness
 
 // Frame & Flex dimensions
-frame_w = filter_di + 2 * wall_thickness + 10.0; // 78mm total width
+frame_w = filter_di + 2 * wall_thickness + 12.0; // 80mm total width (widened for corner screw clearance)
 frame_h = 30.0;                                  // 30mm vertical height
-frame_t = 5.0;                                   // 5mm thick rigid backing plates
+frame_t = 6.0;                                   // 6mm thick rigid backing plates (thickened to fit 12mm screws)
 flex_t = 2.0;                                    // 2mm thick flex PLA inserts
+flex_h = frame_h + 3.0;                          // 33mm flex plate height (extends 3mm ONLY at top)
 
 // Dado (Filter Channel) dimensions
 dado_w = filter_di + 0.5; // 62.5mm width (0.5mm clearance)
@@ -28,11 +29,11 @@ ridge_h = 0.15; // 0.15mm height above dado bottom (reaches split plane)
 ridge_t = 2.0;  // 2.0mm vertical width of the ridge
 
 // M3 Screw spacing
-screw_x_offset = frame_w / 2 - 5.0; // 34mm from center (screws at x = -34 and +34)
+screw_x_offset = 34.0;              // 34mm from center (kept at 34 to clear dado)
 screw_z_offset = 10.0;              // screws at z = -10 and +10
 
 // M3 Hex Nut dimensions (DIN 934)
-hex_nut_w = 6.0; // 6.0mm flat-to-flat pocket width (5.5mm nut + 0.5mm tolerance)
+hex_nut_w = 5.8; // 5.8mm flat-to-flat pocket width (5.5mm nut + 0.3mm tolerance for snug fit)
 hex_nut_d = 3.0; // 3.0mm pocket depth (2.4mm nut + 0.6mm tolerance)
 
 // --- ANIMATION CONTROLS ---
@@ -84,7 +85,7 @@ module assembly() {
         for (z = [-screw_z_offset, screw_z_offset]) {
             translate([x, -flex_t - frame_t, z])
                 rotate([-90, 0, 0])
-                    mock_m3_screw(len = 14.0);
+                    mock_m3_screw(len = 12.0);
         }
     }
     
@@ -97,22 +98,39 @@ module assembly() {
     }
 }
 
+module rounded_box(w, t, h, r) {
+    // Generates a rounded box of width w, thickness t, height h, with all edges rounded by radius r.
+    // The box extends in +Y direction from y=0 to t.
+    // Centered in X and Z.
+    $fn = 20;
+    hull() {
+        for (x = [-w/2 + r, w/2 - r]) {
+            for (y = [r, t - r]) {
+                for (z = [-h/2 + r, h/2 - r]) {
+                    translate([x, y, z])
+                        sphere(r = r);
+                }
+            }
+        }
+    }
+}
+
 module front_half() {
-    // Simple flat front clamp plate.
+    // Rounded front clamp plate.
     // Local coordinate origin [0,0,0] is on the mating plane.
     // Plate extends in the -Y direction from y = 0 to -frame_t.
     difference() {
-        // Main block
-        translate([-frame_w/2, -frame_t, -frame_h/2])
-            cube([frame_w, frame_t, frame_h]);
+        // Main rounded block (translated to extend in -Y)
+        translate([0, -frame_t, 0])
+            rounded_box(frame_w, frame_t, frame_h, 2.0);
             
         // M3 Screw Clearance Holes with Counterbores
         for (x = [-screw_x_offset, screw_x_offset]) {
             for (z = [-screw_z_offset, screw_z_offset]) {
-                // Shaft clearance (D=3.3)
+                // Shaft clearance (D=3.5)
                 translate([x, 1.0, z])
                     rotate([90, 0, 0])
-                        cylinder(d = 3.3, h = frame_t + 2.0, $fn = 20);
+                        cylinder(d = 3.5, h = frame_t + 2.0, $fn = 20);
                 // Counterbore recess (D=6.0, depth 3.0)
                 translate([x, -frame_t + 3.0, z])
                     rotate([90, 0, 0])
@@ -127,17 +145,16 @@ module back_half() {
     // Local coordinate origin [0,0,0] is on the mating plane.
     // Plate extends in the +Y direction from y = 0 to frame_t.
     difference() {
-        // Main block
-        translate([-frame_w/2, 0.0, -frame_h/2])
-            cube([frame_w, frame_t, frame_h]);
+        // Main rounded block
+        rounded_box(frame_w, frame_t, frame_h, 2.0);
             
-        // M3 Screw Clearance Holes (D=3.3) and Hex Nut Pockets
+        // M3 Screw Clearance Holes (D=3.5) and Hex Nut Pockets
         for (x = [-screw_x_offset, screw_x_offset]) {
             for (z = [-screw_z_offset, screw_z_offset]) {
                 // Clearance shaft
                 translate([x, frame_t + 1.0, z])
                     rotate([90, 0, 0])
-                        cylinder(d = 3.3, h = frame_t + 2.0, $fn = 20);
+                        cylinder(d = 3.5, h = frame_t + 2.0, $fn = 20);
                 
                 // Hex nut pocket (D=6.0 flat-to-flat, depth=3.0) cut from the rear face (y = frame_t)
                 translate([x, frame_t + 0.1, z])
@@ -157,20 +174,20 @@ module flex_plate() {
         union() {
             // 1. Base plate with vertical channel and funnel cut out
             difference() {
-                // Base block
+                // Base block (extended only at top: Z = -15 -> 18)
                 translate([-frame_w/2, -flex_t, -frame_h/2])
-                    cube([frame_w, flex_t, frame_h]);
-                // Vertical Dado (channel of depth dado_d = 0.15)
+                    cube([frame_w, flex_t, flex_h]);
+                // Vertical Dado (channel of depth dado_d = 0.15, Z = -16 -> 19)
                 translate([-dado_w/2, -dado_d - 0.05, -frame_h/2 - 1.0])
-                    cube([dado_w, dado_d + 0.1, frame_h + 2.0]);
-                // Entry Funnel (slants the channel back to the plate rear face)
+                    cube([dado_w, dado_d + 0.1, flex_h + 2.0]);
+                // Entry Funnel (Top) - slants the channel back to the plate rear face (Z = 13 -> 18.1)
                 translate([-dado_w/2, 0, 0])
-                    rotate([0, 90, 0])
+                    rotate([90, 90, 0]) // Fixed rotation
                         linear_extrude(height = dado_w)
                             polygon([
-                                [-dado_d, frame_h/2 - 3.0],
-                                [-flex_t - 0.1, frame_h/2 + 0.1],
-                                [-dado_d, frame_h/2 + 0.1]
+                                [-dado_d, frame_h/2 - 2.0], // Starts inside frame (Z = 13)
+                                [-flex_t - 0.1, frame_h/2 + 3.1], // Ends at top of extended flex (Z = 18.1)
+                                [-dado_d, frame_h/2 + 3.1]
                             ]);
             }
             // 2. Scraping Ridge (added back on top of the channel surface)
@@ -178,12 +195,12 @@ module flex_plate() {
             translate([-ridge_w/2, -dado_d, -ridge_t/2])
                 cube([ridge_w, ridge_h, ridge_t]);
         }
-        // 3. M3 Screw Clearance Holes (D=3.3)
+        // 3. M3 Screw Clearance Holes (D=3.5)
         for (x = [-screw_x_offset, screw_x_offset]) {
             for (z = [-screw_z_offset, screw_z_offset]) {
                 translate([x, 1.0, z])
                     rotate([90, 0, 0])
-                        cylinder(d = 3.3, h = flex_t + 2.0, $fn = 20);
+                        cylinder(d = 3.5, h = flex_t + 2.0, $fn = 20);
             }
         }
     }
