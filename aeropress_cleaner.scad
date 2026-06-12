@@ -112,9 +112,10 @@ module assembly() {
         rotate([180, 0, 0])
             mock_m3_screw(len = 30.0);
             
-    // 4a. Mock M3x16 screw for casing spring peg (translated to counterbore shoulder Z=-12.0)
-    translate([-85.0, 0.0, -12.0])
-        mock_m3_screw(len = 16.0);
+    // 4a. Mock M3x30 screw for casing spring peg (Through-screw, head at top Z=12.0)
+    translate([-85.0, 0.0, 12.0])
+        rotate([180, 0, 0])
+            mock_m3_screw(len = 30.0);
             
     // 5. Mock Plunger (Animated)
     if (animate || t_val > 0) {
@@ -135,10 +136,10 @@ module assembly() {
     angle = atan2(dy, dx);
     
     color("red")
-        translate([stationary_peg_x, stationary_peg_y, -1.5])
+        translate([stationary_peg_x, stationary_peg_y, 0.0])
             rotate([0, 0, angle])
                 rotate([0, 90, 0])
-                    cylinder(d = 5.0, h = dist, $fn=20);
+                    cylinder(d = 10.0, h = dist, $fn=20);
 }
 
 module ring_body() {
@@ -151,14 +152,14 @@ module ring_body() {
                 translate([0, 0, -15.0])
                     cylinder(d = plunger_di + 2 * wall_thickness, h = 35.0, $fn = 100);
                 
-                // Horizontal Slot in ring wall for arm/blade to sweep (Z span: z = -5.0 -> +7.0, height 12.0mm)
-                translate([0, 0, -5.0]) {
+                // Horizontal Slot in ring wall for arm/blade to sweep (Z span: z = -5.5 -> +7.0, height 12.5mm)
+                translate([0, 0, -5.5]) {
                     intersection() {
                         difference() {
-                            cylinder(d = plunger_di + 2*wall_thickness + 5.0, h = 12.0, $fn=100);
+                            cylinder(d = plunger_di + 2*wall_thickness + 5.0, h = 12.5, $fn=100);
                             cylinder(d = plunger_di - 2.0, h = 14.0, center=true, $fn=100);
                         }
-                        linear_extrude(height = 12.0) {
+                        linear_extrude(height = 12.5) {
                             polygon([
                                 [0.0, 0.0],
                                 [75.0 * cos(15.0), 75.0 * sin(15.0)],
@@ -216,39 +217,38 @@ module ring_body() {
             translate([trigger_pivot_x, trigger_pivot_y, -15.1])
                 cylinder(d = 6.2, h = 2.6, $fn = 6);
                 
-            // M3 Screw hole for stationary spring peg (Nut-secured)
-            // Clearance hole d=3.4 through the bottom (Z=-15.1 to -7.1, height 8.0)
+            // M3 Screw hole for stationary spring peg (Through-screw, Nut-secured at bottom)
+            // Head recess at top of handle plate:
+            translate([-85.0, 0.0, 15.0 - screw_head_h])
+                cylinder(d = screw_head_d, h = screw_head_h + 0.1, $fn = 30);
+            // Clearance hole through bottom plate, pocket & top plate:
             translate([-85.0, 0.0, -15.1])
-                cylinder(d = 3.4, h = 8.4, $fn = 20);
-            // Counterbore for screw head (d=6.0, depth 3.0, Z=-15.1 to -11.9)
+                cylinder(d = screw_clearance_d, h = 30.2, $fn = 30);
+            // Hex nut recess at bottom of handle plate:
             translate([-85.0, 0.0, -15.1])
-                cylinder(d = 6.0, h = 3.2, $fn = 30);
-            // Hex Nut pocket in the pocket floor (d=5.8 flat-to-flat, depth 3.0, Z=-6.8 to -3.8)
-            translate([-85.0, 0.0, -6.8])
-                rotate([0, 0, 30])
-                    cylinder(d = 5.8 / cos(30), h = 3.1, $fn = 6);
+                cylinder(d = 6.2, h = 2.6, $fn = 6);
                 
-            // 4. Internal Gear Pocket Cavity Cutout (z = -3.8 -> 3.8, height 7.6)
+            // 4. Internal Gear Pocket Cavity Cutout (z = -5.5 -> 5.5, height 11.0)
             // Houses both gear knuckles and the trigger lever swept path (open 30mm wide slot)
-            translate([0, 0, -3.8]) {
-                linear_extrude(height = 7.6) {
+            translate([0, 0, -5.5]) {
+                linear_extrude(height = 11.0) {
                     hull() {
                         translate([pivot_x, pivot_y])
                             circle(r = 15.0, $fn = 50);
                         translate([trigger_pivot_x, trigger_pivot_y])
                             circle(r = 15.0, $fn = 50);
                     }
-                    // Asymmetric pocket extension (Z = -3.8 -> 3.8, X = -90 -> -50, Y = -5 -> 15)
-                    // Clears the spring (Y > 0) and casing peg (Y=0) while keeping the bottom wall (Y < 0) solid.
-                    translate([-90.0, -5.0])
-                        square([40.0, 20.0]);
+                    // Asymmetric pocket extension (Z = -5.5 -> 5.5, X = -90 -> -50, Y = -7 -> 15)
+                    // Clears the 10mm OD spring (extends to Y=-5) with 2mm clearance.
+                    translate([-90.0, -7.0])
+                        square([40.0, 22.0]);
                 }
             }
             
-            // 5. Trigger lever riser slot cutout in top plate (z = 3.5 -> 15.1)
+            // 5. Trigger lever riser slot cutout in top plate (z = 5.5 -> 15.1)
             // Tightened arc spanning 85 -> 145 degrees (actual travel 90 -> 135)
-            translate([trigger_pivot_x, trigger_pivot_y, 3.5]) {
-                linear_extrude(height = 11.6) {
+            translate([trigger_pivot_x, trigger_pivot_y, 5.5]) {
+                linear_extrude(height = 9.6) {
                     intersection() {
                         difference() {
                             circle(r = 12.0 + 8.0, $fn = 60);
