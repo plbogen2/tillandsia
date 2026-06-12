@@ -321,13 +321,16 @@ module trigger_lever() {
                 translate([0, 0, 1.8])
                     cylinder(d = 14.0, h = 3.6, center = true, $fn = 50);
                 translate([-12.0, 0.0, 1.8])
-                    cylinder(d = 10.0, h = 3.6, center = true, $fn = 50);
+                    cylinder(d = 7.0, h = 3.6, center = true, $fn = 50);
             }
             
-            // Riser (vertical cylinder, Z = -0.1 -> 16.1 for overlap)
-            // Riser (vertical cylinder, Z = 3.5 -> 16.2 for overlap)
+            // Riser (vertical cylinder, split to clear 10mm spring at bottom)
+            // Lower part (Z = 3.5 -> 5.0, d = 7.0 to fit inside spring ID 8.0)
             translate([-12.0, 0.0, 3.5])
-                cylinder(d = 10.0, h = 12.7, $fn = 50);
+                cylinder(d = 7.0, h = 1.5, $fn = 50);
+            // Upper part (Z = 5.0 -> 16.2, d = 10.0 for strength)
+            translate([-12.0, 0.0, 5.0])
+                cylinder(d = 10.0, h = 11.2, $fn = 50);
             
             // Thumb Tab horizontal plate (sitting at z = 16.0, thickness 3.6mm, 1.0mm clearance gap)
             // No center=true, so spans Z = 16.0 -> 19.6
