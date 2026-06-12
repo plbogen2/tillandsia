@@ -282,9 +282,9 @@ module wiper_arm() {
             translate([0, 0, -3.6])
                 cylinder(d = 6.26, h = 3.6, $fn = 50);
                 
-            // Wiper Arm pointing along +X locally (length 63.0mm, thickness 3.6mm, z = -3.6 -> 0.0)
+            // Stiffened Wiper Arm bar (length 63.0mm, thickness 6.6mm, z = -3.6 -> 3.0)
             translate([0, -2.5, -3.6])
-                cube([63.0, 5.0, 3.6]);
+                cube([63.0, 5.0, 6.6]);
                 
             // 5.0mm Pinion Gear Sector centered at Z=-1.8 (thickness 3.6mm, z = -3.6 -> 0.0)
             // Uses MCAD involute gear library for smoother meshing.
@@ -302,8 +302,8 @@ module wiper_arm() {
         // Pin Hole (Clearance fit for M3 screw)
         cylinder(d = screw_clearance_d, h = 10.0, center = true, $fn = 30);
             
-        // Wiper Blade slot (dovetail)
-        translate([8.0, 0, -1.3])
+        // Wiper Blade slot (dovetail, 4.6mm deep, Z = -1.6 -> 3.0)
+        translate([8.0, 0, 0.7])
             dovetail_solid(55.1);
     }
 }
@@ -374,14 +374,14 @@ module wiper_blade() {
     // Fits into the wiper arm slot and extends upwards to scrape the plunger face.
     // Shifted to start at local x = 8.0 to clear pivot knuckle.
     // Total length is 55.0mm.
-    // Total height is 5.6mm (2.6mm in slot, 3.0mm sticking out).
-    // Shifted down by 1.3mm to match the new wiper arm slot position.
-    translate([8.0, 0, -1.3]) {
+    // Total height is 7.6mm (4.6mm in slot, 3.0mm sticking out).
+    // Shifted to Z=0.7 to match the deeper wiper arm slot.
+    translate([8.0, 0, 0.7]) {
         // Base slot block (dovetail with clearance)
         dovetail_blade_base(55.0, clearance);
-        // Squeegee flap (3.0mm sticks out, total height 5.6mm, z = -0.1 -> 3.0 global)
+        // Squeegee flap (3.0mm sticks out, total height 7.6mm, z = 2.9 -> 6.0 global)
         // Centered in Y, with 0.1mm overlap at base
-        translate([0, -0.5, 1.2])
+        translate([0, -0.5, 2.2])
             cube([55.0, 1.0, 3.1]);
     }
 }
@@ -468,10 +468,10 @@ module dovetail_solid(length) {
     rotate([0, 90, 0])
         linear_extrude(height = length)
             polygon([
-                [1.3, -1.25],
-                [1.3, 1.25],
-                [-1.3, 0.75],
-                [-1.3, -0.75]
+                [2.3, -1.25],
+                [2.3, 1.25],
+                [-2.3, 0.75],
+                [-2.3, -0.75]
             ]);
 }
 
@@ -481,10 +481,10 @@ module dovetail_blade_base(length, clear = 0.0) {
     rotate([0, 90, 0])
         linear_extrude(height = length)
             polygon([
-                [1.3, -w_bottom/2],
-                [1.3, w_bottom/2],
-                [-1.3, w_top/2],
-                [-1.3, -w_top/2]
+                [2.3, -w_bottom/2],
+                [2.3, w_bottom/2],
+                [-2.3, w_top/2],
+                [-2.3, -w_top/2]
             ]);
 }
 
