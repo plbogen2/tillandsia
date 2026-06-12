@@ -185,25 +185,13 @@ module ring_body() {
 
         // SUBTRACT internal bores and holes from the entire assembly
         union() {
-            // Upper Chamber (plunger bore, ID 57.5, z = 0 -> 15)
+            // Upper Chamber (plunger bore, ID 58.3, z = 0 -> 20, extended to top)
             translate([0, 0, -0.1])
-                cylinder(d = plunger_di + 0.3, h = 15.1, $fn = 100);
+                cylinder(d = plunger_di + 0.3, h = 20.2, $fn = 100);
                 
-            // Lower Chamber (shroud, ID 57.5, z = -15 -> 0)
+            // Lower Chamber (shroud, ID 58.3, z = -15 -> 0)
             translate([0, 0, -15.1])
                 cylinder(d = plunger_di + 0.3, h = 15.2, $fn = 100);
-                
-            // Stop Ledge (internal flange, ID 53.0, z = 15 -> 18)
-            rotate_extrude($fn = 100) {
-                polygon([
-                    [0, 14.9],
-                    [(plunger_di + 0.3)/2, 14.9],
-                    [53.0/2, 17.0],
-                    [53.0/2, 18.0],
-                    [(plunger_di + 0.3)/2, 20.1],
-                    [0, 20.1]
-                ]);
-            }
                 
             // M3 Screw Pivot holes (Pivot A):
             // Head recess at top of handle plate:
@@ -230,35 +218,35 @@ module ring_body() {
             // M3 Screw hole for stationary spring peg (Nut-secured)
             // Clearance hole d=3.4 through the bottom (Z=-15.1 to -7.1, height 8.0)
             translate([-85.0, 0.0, -15.1])
-                cylinder(d = 3.4, h = 8.1, $fn = 20);
+                cylinder(d = 3.4, h = 8.4, $fn = 20);
             // Counterbore for screw head (d=6.0, depth 3.0, Z=-15.1 to -11.9)
             translate([-85.0, 0.0, -15.1])
                 cylinder(d = 6.0, h = 3.2, $fn = 30);
-            // Hex Nut pocket in the pocket floor (d=5.8 flat-to-flat, depth 3.0, Z=-7.1 to -4.1)
-            translate([-85.0, 0.0, -7.1])
+            // Hex Nut pocket in the pocket floor (d=5.8 flat-to-flat, depth 3.0, Z=-6.8 to -3.8)
+            translate([-85.0, 0.0, -6.8])
                 rotate([0, 0, 30])
                     cylinder(d = 5.8 / cos(30), h = 3.1, $fn = 6);
                 
-            // 4. Internal Gear Pocket Cavity Cutout (z = -4.1 -> 4.1, height 8.2)
+            // 4. Internal Gear Pocket Cavity Cutout (z = -3.8 -> 3.8, height 7.6)
             // Houses both gear knuckles and the trigger lever swept path (open 30mm wide slot)
-            translate([0, 0, -4.1]) {
-                linear_extrude(height = 8.2) {
+            translate([0, 0, -3.8]) {
+                linear_extrude(height = 7.6) {
                     hull() {
                         translate([pivot_x, pivot_y])
                             circle(r = 15.0, $fn = 50);
                         translate([trigger_pivot_x, trigger_pivot_y])
                             circle(r = 15.0, $fn = 50);
                     }
-                    // Extend pocket left to clear the trigger peg and spring
-                    translate([-120.0, -15.0])
-                        square([65.0, 30.0]);
+                    // Shortened pocket extension (Z = -3.8 -> 3.8, X = -95 -> -50)
+                    translate([-95.0, -15.0])
+                        square([45.0, 30.0]);
                 }
             }
             
             // 5. Trigger lever riser slot cutout in top plate (z = 4.0 -> 15.1)
             // Arc of radius 12mm, width 11mm (0.5mm clearance), spanning 60 -> 180 degrees from Pivot B [-60, 0]
-            translate([trigger_pivot_x, trigger_pivot_y, 3.9]) {
-                linear_extrude(height = 11.2) {
+            translate([trigger_pivot_x, trigger_pivot_y, 3.5]) {
+                linear_extrude(height = 11.6) {
                     intersection() {
                         difference() {
                             circle(r = 12.0 + 8.0, $fn = 60);
@@ -275,18 +263,10 @@ module ring_body() {
                 }
             }
             
-            // 6. Spring clearance slot cutout in top plate (z = 3.9 -> 15.1)
-            // Prevents spring collision with the top plate corner and allows top-down installation
-            hull() {
-                translate([-85.0, 0.0, 3.9])
-                    cylinder(d = 9.0, h = 11.2, $fn = 30);
-                translate([-60.0, 12.0, 3.9])
-                    cylinder(d = 9.0, h = 11.2, $fn = 30);
-                translate([-68.48, 8.48, 3.9])
-                    cylinder(d = 9.0, h = 11.2, $fn = 30);
-            }
         }
     }
+    // 4. Plunger Guide Bumps (Z=8.0)
+    plunger_guide_bumps();
 }
 
 module wiper_arm() {
@@ -533,6 +513,19 @@ module rounded_cylinder(d, h, r, center = true) {
                 rotate_extrude($fn = 50)
                     translate([d/2 - limit_r, 0, 0])
                         circle(r = limit_r, $fn = 25);
+        }
+    }
+}
+
+module plunger_guide_bumps() {
+    r_sphere = 1.5;
+    protrusion = 0.8;
+    rc = (plunger_di + 0.3)/2 + r_sphere - protrusion;
+    color("gray") {
+        for (a = [45, 135, 225, 315]) {
+            rotate([0, 0, a])
+                translate([rc, 0, 8.0])
+                    sphere(r = r_sphere, $fn = 20);
         }
     }
 }
