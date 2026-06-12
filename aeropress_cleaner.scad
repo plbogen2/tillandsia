@@ -96,24 +96,25 @@ module assembly() {
     translate([trigger_pivot_x, trigger_pivot_y, 0.0]) {
         rotate([0, 0, trigger_angle]) {
             color("green") trigger_lever();
-            // Mock M3x20 screw for trigger spring peg (goes through riser)
-            translate([-12.0, 0.0, 19.6])
+            // Mock M3x20 screw for trigger spring peg (translated to counterbore shoulder Z=16.6)
+            translate([-12.0, 0.0, 16.6])
                 rotate([180, 0, 0])
                     mock_m3_screw(len = 20.0);
         }
     }
     
     // 4. M3 Metal Pivot Screws (Pivot A & B)
-    translate([pivot_x, pivot_y, 15.0])
+    // Translated to counterbore shoulder (Z = 15.0 - 3.0 = 12.0)
+    translate([pivot_x, pivot_y, 12.0])
         rotate([180, 0, 0])
             mock_m3_screw(len = 30.0);
-    translate([trigger_pivot_x, trigger_pivot_y, 15.0])
+    translate([trigger_pivot_x, trigger_pivot_y, 12.0])
         rotate([180, 0, 0])
             mock_m3_screw(len = 30.0);
             
-    // 4a. Mock M3x12 screw for casing spring peg
-    translate([-85.0, 0.0, -15.0])
-        mock_m3_screw(len = 12.0);
+    // 4a. Mock M3x16 screw for casing spring peg (translated to counterbore shoulder Z=-12.0)
+    translate([-85.0, 0.0, -12.0])
+        mock_m3_screw(len = 16.0);
             
     // 5. Mock Plunger (Animated)
     if (animate || t_val > 0) {
@@ -237,9 +238,9 @@ module ring_body() {
                         translate([trigger_pivot_x, trigger_pivot_y])
                             circle(r = 15.0, $fn = 50);
                     }
-                    // Shortened pocket extension (Z = -3.8 -> 3.8, X = -95 -> -50)
-                    translate([-95.0, -15.0])
-                        square([45.0, 30.0]);
+                    // Shortened pocket extension (Z = -3.8 -> 3.8, X = -90 -> -50)
+                    translate([-90.0, -15.0])
+                        square([40.0, 30.0]);
                 }
             }
             
@@ -388,12 +389,12 @@ module wiper_blade() {
 
 module mock_m3_screw(len = 12.0) {
     color("silver") {
-        // Head recess sits at z = -12 -> -9.5, so screw head sits here pointing down.
-        // Rendering socket head cap screw head (D=5.5, H=3.0) sticking out 0.5mm below knuckle
-        translate([0, 0, -2.5])
+        // Head flush with Z=0, goes down to Z=-3.0
+        translate([0, 0, -3.0])
             cylinder(d = 5.5, h = 3.0, $fn = 20);
-        // Screw shaft going up into the upper knuckle
-        cylinder(d = 3.0, h = len, $fn = 20);
+        // Shaft goes from Z=-0.5 to len-3.0 (0.5mm overlap)
+        translate([0, 0, -0.5])
+            cylinder(d = 3.0, h = len - 2.5, $fn = 20);
     }
 }
 
