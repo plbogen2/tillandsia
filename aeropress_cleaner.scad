@@ -96,6 +96,10 @@ module assembly() {
     translate([trigger_pivot_x, trigger_pivot_y, 0.0]) {
         rotate([0, 0, trigger_angle]) {
             color("green") trigger_lever();
+            // Mock M3x20 screw for trigger spring peg (goes through riser)
+            translate([-12.0, 0.0, 19.6])
+                rotate([180, 0, 0])
+                    mock_m3_screw(len = 20.0);
         }
     }
     
@@ -106,6 +110,10 @@ module assembly() {
     translate([trigger_pivot_x, trigger_pivot_y, 15.0])
         rotate([180, 0, 0])
             mock_m3_screw(len = 30.0);
+            
+    // 4a. Mock M3x12 screw for casing spring peg
+    translate([-85.0, 0.0, -15.0])
+        mock_m3_screw(len = 12.0);
             
     // 5. Mock Plunger (Animated)
     if (animate || t_val > 0) {
@@ -219,13 +227,17 @@ module ring_body() {
             translate([trigger_pivot_x, trigger_pivot_y, -15.1])
                 cylinder(d = 6.2, h = 2.6, $fn = 6);
                 
-            // M3 Screw hole for stationary spring peg (replaces printed peg)
-            // Thread hole d=2.8 through the floor (Z=-15 to 2.9, height 17.9)
+            // M3 Screw hole for stationary spring peg (Nut-secured)
+            // Clearance hole d=3.4 through the bottom (Z=-15.1 to -7.1, height 8.0)
             translate([-85.0, 0.0, -15.1])
-                cylinder(d = 2.8, h = 18.0, $fn = 20);
+                cylinder(d = 3.4, h = 8.1, $fn = 20);
             // Counterbore for screw head (d=6.0, depth 3.0, Z=-15.1 to -11.9)
             translate([-85.0, 0.0, -15.1])
                 cylinder(d = 6.0, h = 3.2, $fn = 30);
+            // Hex Nut pocket in the pocket floor (d=5.8 flat-to-flat, depth 3.0, Z=-7.1 to -4.1)
+            translate([-85.0, 0.0, -7.1])
+                rotate([0, 0, 30])
+                    cylinder(d = 5.8 / cos(30), h = 3.1, $fn = 6);
                 
             // 4. Internal Gear Pocket Cavity Cutout (z = -4.1 -> 4.1, height 8.2)
             // Houses both gear knuckles and the trigger lever swept path (open 30mm wide slot)
@@ -311,7 +323,7 @@ module wiper_arm() {
         cylinder(d = screw_clearance_d, h = 10.0, center = true, $fn = 30);
             
         // Wiper Blade slot (dovetail)
-        translate([8.0, 0, -1.8])
+        translate([8.0, 0, -1.3])
             dovetail_solid(55.1);
     }
 }
@@ -358,16 +370,22 @@ module trigger_lever() {
                         gear_rotation = 0,
                         thickness = 3.6
                     );
-                
-            // Vertical Spring Peg pointing DOWN from trigger arm bottom surface (z = 0.0 -> -3.0)
-            // Placed at distance 12mm along the thumb tab axis (180 degrees)
-            translate([-12.0, 0.0, 0.0])
-                mirror([0, 0, 1])
-                    cylinder(d = spring_peg_d, h = 3.0, $fn = 25);
         }
 
         // Pin Hole (Clearance fit for M3 screw)
         cylinder(d = screw_clearance_d, h = 10.0, center = true, $fn = 30);
+        
+        // M3 Screw hole for trigger spring peg (goes through riser, nut-secured)
+        // Head counterbore at top of thumb tab (d=6.0, depth 3.0, Z=16.6 to 19.7)
+        translate([-12.0, 0.0, 16.6])
+            cylinder(d = 6.0, h = 3.2, $fn = 30);
+        // Clearance hole through riser/arm (d=3.4, Z=3.0 to 16.6)
+        translate([-12.0, 0.0, 2.9])
+            cylinder(d = 3.4, h = 13.8, $fn = 20);
+        // Hex nut pocket at bottom of arm (d=5.8 flat-to-flat, depth 3.0, Z=0.0 to 3.0)
+        translate([-12.0, 0.0, -0.1])
+            rotate([0, 0, 30])
+                cylinder(d = 5.8 / cos(30), h = 3.2, $fn = 6);
     }
 }
 
@@ -376,14 +394,14 @@ module wiper_blade() {
     // Fits into the wiper arm slot and extends upwards to scrape the plunger face.
     // Shifted to start at local x = 8.0 to clear pivot knuckle.
     // Total length is 55.0mm.
-    // Total height is 8.0mm (5.0mm in slot, 3.0mm sticking out).
-    // Shifted down by 1.8mm to match the new wiper arm slot position.
-    translate([8.0, 0, -1.8]) {
+    // Total height is 5.6mm (2.6mm in slot, 3.0mm sticking out).
+    // Shifted down by 1.3mm to match the new wiper arm slot position.
+    translate([8.0, 0, -1.3]) {
         // Base slot block (dovetail with clearance)
         dovetail_blade_base(55.0, clearance);
-        // Squeegee flap (3.0mm sticks out, total height 8.0mm, z = 3.1 -> 6.2)
+        // Squeegee flap (3.0mm sticks out, total height 5.6mm, z = -0.1 -> 3.0 global)
         // Centered in Y, with 0.1mm overlap at base
-        translate([0, -0.5, 1.7])
+        translate([0, -0.5, 1.2])
             cube([55.0, 1.0, 3.1]);
     }
 }
@@ -470,10 +488,10 @@ module dovetail_solid(length) {
     rotate([0, 90, 0])
         linear_extrude(height = length)
             polygon([
-                [1.8, -1.25],
-                [1.8, 1.25],
-                [-1.8, 0.75],
-                [-1.8, -0.75]
+                [1.3, -1.25],
+                [1.3, 1.25],
+                [-1.3, 0.75],
+                [-1.3, -0.75]
             ]);
 }
 
@@ -483,10 +501,10 @@ module dovetail_blade_base(length, clear = 0.0) {
     rotate([0, 90, 0])
         linear_extrude(height = length)
             polygon([
-                [1.8, -w_bottom/2],
-                [1.8, w_bottom/2],
-                [-1.8, w_top/2],
-                [-1.8, -w_top/2]
+                [1.3, -w_bottom/2],
+                [1.3, w_bottom/2],
+                [-1.3, w_top/2],
+                [-1.3, -w_top/2]
             ]);
 }
 
