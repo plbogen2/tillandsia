@@ -238,9 +238,10 @@ module ring_body() {
                         translate([trigger_pivot_x, trigger_pivot_y])
                             circle(r = 15.0, $fn = 50);
                     }
-                    // Shortened pocket extension (Z = -3.8 -> 3.8, X = -90 -> -50)
-                    translate([-90.0, -15.0])
-                        square([40.0, 30.0]);
+                    // Asymmetric pocket extension (Z = -3.8 -> 3.8, X = -90 -> -50, Y = -5 -> 15)
+                    // Clears the spring (Y > 0) and casing peg (Y=0) while keeping the bottom wall (Y < 0) solid.
+                    translate([-90.0, -5.0])
+                        square([40.0, 20.0]);
                 }
             }
             
